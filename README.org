@@ -1,0 +1,80 @@
+#+title: DUNE DAQ REPL
+
+This holds a read-eval-print loop for DUNE DAQ applications.
+
+So far, it has simple support for running a ~daq_application~ as a
+Python subprocess and sending commands to it via the
+~FileCommandFacility~.
+
+Here is an example as a Python script but it should be obvious how to
+use ~ipython~ or ~ptipython~ to use this same code in an interactive REPL.
+The value ~0.1~ given to the ~da.output()~ is in seconds and represents
+how long to wait for receiving any stdout back from ~daq_application~.
+
+#+begin_src python :exports both :results output code :wrap example
+import json
+import ddrepl
+cmds = json.load(open("fdpc-job.json"))
+da = ddrepl.DaqApp()
+for cmd in cmds:
+    da(cmd)
+    print(da.output(0.1))
+del(da)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+2020-Oct-13 13:46:57,126 INFO [fileCommandFacility::fileCommandFacility(...) at /home/bv/dev/dune-daq/sv/appfwk/src/FileCommandFacility.cpp:194] open: scheme:file ext:jstream
+2020-Oct-13 13:46:57,127 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:init
+2020-Oct-13 13:46:57,128 INFO [dunedaq::appfwk::DAQModuleManager::init_queues(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:73] Adding queue: hose
+2020-Oct-13 13:46:57,128 INFO [dunedaq::appfwk::DAQModuleManager::init_modules(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:36] construct: FakeDataProducerDAQModule : fdp
+2020-Oct-13 13:46:57,153 INFO [dunedaq::appfwk::FakeDataProducerDAQModule::init(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataProducerDAQModule.cpp:48] FDP: output queue is hose
+2020-Oct-13 13:46:57,153 INFO [dunedaq::appfwk::DAQModuleManager::init_modules(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:36] construct: FakeDataConsumerDAQModule : fdc
+2020-Oct-13 13:46:57,154 INFO [dunedaq::appfwk::FakeDataConsumerDAQModule::init(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataConsumerDAQModule.cpp:47] FDP: input queue is hose
+2020-Oct-13 13:46:57,154 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/appfwk/src/FileCommandFacility.cpp:230] DAQModuleManager execution complete
+
+2020-Oct-13 13:46:57,255 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:conf
+2020-Oct-13 13:46:57,255 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "conf" to "fdp":
+{
+    "ending_int": 14,
+    "nIntsPerVector": 10,
+    "queue_timeout_ms": 100,
+    "starting_int": -4,
+    "wait_between_sends_ms": 1000
+}
+{
+    "ending_int": 14,
+    "nIntsPerVector": 10,
+    "queue_timeout_ms": 100,
+    "starting_int": -4,
+    "wait_between_sends_ms": 1000
+}
+2020-Oct-13 13:46:57,255 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "conf" to "fdc":
+{
+    "ending_int": 14,
+    "nIntsPerVector": 10,
+    "queue_timeout_ms": 100,
+    "starting_int": -4
+}
+2020-Oct-13 13:46:57,255 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/appfwk/src/FileCommandFacility.cpp:230] DAQModuleManager execution complete
+
+2020-Oct-13 13:46:57,355 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:start
+2020-Oct-13 13:46:57,355 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "start" to "fdc":
+{
+    "run": 42
+}
+2020-Oct-13 13:46:57,355 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "start" to "fdp":
+{
+    "run": 42
+}
+2020-Oct-13 13:46:57,356 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/appfwk/src/FileCommandFacility.cpp:230] DAQModuleManager execution complete
+2020-Oct-13 13:46:57,356 INFO [dunedaq::appfwk::FakeDataConsumerDAQModule::do_work(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataConsumerDAQModule.cpp:96] FDC: do_work
+2020-Oct-13 13:46:57,356 INFO [dunedaq::appfwk::FakeDataProducerDAQModule::do_work(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataProducerDAQModule.cpp:101] FDP: do_work
+2020-Oct-13 13:46:57,356 DEBUG_0 [dunedaq::appfwk::FakeDataProducerDAQModule::do_work(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataProducerDAQModule.cpp:118] Produced vector 0 with contents {-4, -3, -2, -1, 0, 1, 2, 3, 4, 5} and size 10 DAQModule: fdp
+
+2020-Oct-13 13:46:57,356 INFO [dunedaq::appfwk::FakeDataProducerDAQModule::do_work(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataProducerDAQModule.cpp:122] FDP "fdp" push 0
+2020-Oct-13 13:46:57,456 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:stop
+2020-Oct-13 13:46:57,456 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "stop" to "fdp":
+
+#+end_example
+
