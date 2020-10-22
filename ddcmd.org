@@ -1,0 +1,944 @@
+#+title: DUNE DAQ Command Object Creation
+#+author: Brett Viren
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/setup/theme-readtheorg.setup
+#+HTML_HEAD: <style> #content{max-width:1800px;}</style>
+#+HTML_HEAD: <style> p{max-width:800px;}</style>
+#+HTML_HEAD: <style> li{max-width:800px;}</style>
+#+OPTIONS:   H:4 num:nil toc:2
+
+* Introduction
+
+DUNE DAQ command objects must rigorously follow a defined schema.
+From this schema, C++, Python and other artifacts are generated using
+a command line tool or its Python package both called [[https://brettviren.github.io/moo][moo]].  With the
+module, ~moo~ may generate Python object types ("otypes") from ~moo~
+"oschema" (object schema) files.  These Python types are strongly
+typed (for Python) and help to guide an editor to produce objects
+which are valid by construction.  The types are also instrumented with
+docstrings and other things to assist the human using an interactive
+REPL, such as ~ipython~ or ~ptipython~, to interactively discover how to
+use them.
+
+This document goes through some of the features of ~moo~ otypes.  It
+starts with some initial setup instructions and a "quick start" to
+make some commands while putting aside any explanation.  The remaining
+sections give information useful in making your own command objects.
+They describe how to load schema and from schema create Python types
+and interrogate those types to learn how to make instances.  It then
+gives a tour of the schema classes with example types from ~appfwk~
+schema.  Penultimate section describes the construction utilities used
+in the quick start and finally some description is given of the
+internals of the Python type generator.
+
+#+begin_tip
+Some ~moo~ nomenclature is used in this document.  A ~moo~ schema consists
+of instances of class in a fixed set of *schema classes*.  These are
+/boolean/, /string/, /number/, /enum/, /sequence/, /record/ and /any/.  An instance
+of one of these classes is called a *type* which is known as by its *type
+name* and which is a leaf in a namespace located through a *type path*.
+In the schema, a *type* is a (meta) data structure which may then be
+represented in or transformed to native programming language forms.
+For example, in C++ a type is used to *generate* code for a C++ ~struct~.
+In Python, the type is used to dynamically create a Python ~class~.
+From the native linage types we may finally an instance of a *type* aka
+an *object*.
+
+We will also describe data types expressed in the native programming
+language as "Plain Old Data" or POD.  
+
+Thus, we may say: a /string/ schema class type ~Email~ produces an object
+which holds the POD string ~"bv@bnl.gov"~.
+#+end_tip
+
+* Setup
+
+We need to install ~moo~ and some nice REPL (here, we recommend ~ptipython~)
+
+#+begin_example
+$ python3.8 -m venv venv
+$ source venv/bin/activate
+$ pip install git+git://github.com/brettviren/moo.git#egg=moo
+$ pip install ptipython
+#+end_example
+
+Let's also clone this repository and that of ~appfwk~.
+
+#+begin_note
+We clone ~appfwk~ here in order to access its ~schema/~ directory.  If you
+have ~appfwk~ installed as a package you may already have access to this
+directory and can then skip the explicit cloning.  Set ~MOO_MODULE_PATH~ if needed. 
+#+end_note
+
+#+begin_example
+$ git clone https://github.com/dune-daq/appfwk.git
+$ export MOO_MODULE_PATH=$(pwd)/appfwk/schema
+$ git clone https://github.com/brettviren/dune-daq-repl.git
+#+end_example
+
+From now on we will run the Python REPL from inside ~dune-daq-repl/~
+
+#+begin_example
+$ cd dune-daq-repl/
+$ ptipython
+Python 3.8.0 (default, Oct 28 2019, 16:14:01) 
+Type 'copyright', 'credits' or 'license' for more information
+IPython 7.18.1 -- An enhanced Interactive Python. Type '?' for help.
+
+In [1]: import dd
+                  ddcmd 
+                  ddrepl
+#+end_example
+
+Here, in a poor, uncolored ASCII facsimile, shows some of the nice REPL
+features that ~ptipython~ provides.  The last two lines are a drop-down
+menu of modules matching an initial ~dd~ typing.  ~Ctrl-n~ to highlight
+~ddcmd~ and ~Enter~ to select.
+
+#+begin_tip
+This document is made in Emacs orgmode using ~ob-ipython~.  It may be reproduced after also running: ~pip install ipython jupyter~ and editing ~ddcmd.org~ from an instance of ~emacs~ started from the Python environment.
+#+end_tip
+
+* Quick Start
+
+This section shows how to create one particular sequence of command
+objects while leaving aside any explanation.  The remainder of the
+document will fill in the background information.
+
+#+begin_src ipython :session :exports both :results raw drawer
+import ddcmd
+
+for mod in ["cmd", "fdp", "fdc"]:
+    schema = ddcmd.load_oschema(f"appfwk-{mod}-schema.jsonnet")
+    these = ddcmd.make_otypes(schema)
+
+queues = cmd.QueueSpecs([
+  cmd.QueueSpec(kind='StdDeQueue', inst="hose", capacity=10)])
+modules = cmd.ModSpecs([
+  cmd.ModSpec(inst="source", plugin="FakeDataProducerDAQModule",
+    data=cmd.QueueInfo(inst="hose", name="output", dir="output")),
+  cmd.ModSpec(inst="sink", plugin="FakeDataConsumerDAQModule",
+    data=cmd.QueueInfo(inst="host", name="input", dir="input"))])
+myinit = ddcmd.init(queues=queues, modules=modules)
+
+myconf = ddcmd.conf([
+  cmd.AddressedCmd(match="source", data=fdp.Conf()),
+  cmd.AddressedCmd(match="sink", data=fdc.Conf())])
+
+[myinit, myconf]
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[189]:
+: [<record Command, fields: {id, data}>, <record Command, fields: {id, data}>]
+:end:
+
+This produces two command objects, one to initialize and one to
+configure.  These can be fed to the ~appfwk~ app ~daq_application~.  Other
+commands exist (eg, ~start~ and ~stop~).
+
+Read on for explanation on what this quick start is doing and how to
+learn to use the Python types to make your own command objects.
+
+* Loading types
+ 
+To get Python types with which we may construct objects we first load
+a schema:
+
+#+begin_src ipython :session :exports both :results raw drawer
+import ddcmd
+schema = ddcmd.load_oschema("appfwk-cmd-schema.jsonnet")
+types = ddcmd.make_otypes(schema)
+types
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[3]:
+#+BEGIN_EXAMPLE
+  {'dunedaq.appfwk.cmd.Match': dunedaq.appfwk.cmd.Match,
+  'dunedaq.appfwk.cmd.Data': dunedaq.appfwk.cmd.Data,
+  'dunedaq.appfwk.cmd.AddressedCmd': dunedaq.appfwk.cmd.AddressedCmd,
+  'dunedaq.appfwk.cmd.AddressedCmds': dunedaq.appfwk.cmd.AddressedCmds,
+  'dunedaq.appfwk.cmd.CmdId': dunedaq.appfwk.cmd.CmdId,
+  'dunedaq.appfwk.cmd.CmdObj': dunedaq.appfwk.cmd.CmdObj,
+  'dunedaq.appfwk.cmd.Command': dunedaq.appfwk.cmd.Command,
+  'dunedaq.appfwk.cmd.QueueKind': dunedaq.appfwk.cmd.QueueKind,
+  'dunedaq.appfwk.cmd.InstName': dunedaq.appfwk.cmd.InstName,
+  'dunedaq.appfwk.cmd.QueueCapacity': dunedaq.appfwk.cmd.QueueCapacity,
+  'dunedaq.appfwk.cmd.QueueSpec': dunedaq.appfwk.cmd.QueueSpec,
+  'dunedaq.appfwk.cmd.QueueSpecs': dunedaq.appfwk.cmd.QueueSpecs,
+  'dunedaq.appfwk.cmd.PluginName': dunedaq.appfwk.cmd.PluginName,
+  'dunedaq.appfwk.cmd.ModSpec': dunedaq.appfwk.cmd.ModSpec,
+  'dunedaq.appfwk.cmd.ModSpecs': dunedaq.appfwk.cmd.ModSpecs,
+  'dunedaq.appfwk.cmd.Init': dunedaq.appfwk.cmd.Init,
+  'dunedaq.appfwk.cmd.Label': dunedaq.appfwk.cmd.Label,
+  'dunedaq.appfwk.cmd.QueueDir': dunedaq.appfwk.cmd.QueueDir,
+  'dunedaq.appfwk.cmd.QueueInfo': dunedaq.appfwk.cmd.QueueInfo,
+  'dunedaq.appfwk.cmd.QueueInfos': dunedaq.appfwk.cmd.QueueInfos,
+  'dunedaq.appfwk.cmd.ModInit': dunedaq.appfwk.cmd.ModInit}
+#+END_EXAMPLE
+:end:
+
+The ~schema~ variable holds a data structure representing a ~moo~
+"oschema" (object schema) which is then turned into a set of Python
+types by the ~make_otypes()~ function.  It happens to return a
+dictionary mapping fully-qualified type name to type (~class~) and these
+types are also made into first-class Python types in a module
+hierarchy.
+
+* Interrogating types 
+
+As an example, let's look at one of the most trivial types in the
+~appfwk~ schema, a ~CmdId~.
+
+#+begin_warning
+The ~CmdId~ is meant to name a command type.  It currently allows a
+fairly free string.  At some point it may allow to take one of an
+enumerated list.
+#+end_warning
+
+First, we import the Python namespace holding all our types and make
+an instance of ~CmdId~.  We'll see how we know what we had to provide
+next.
+
+#+begin_src ipython :session :exports both :results raw drawer
+from dunedaq.appfwk import cmd
+cid = cmd.CmdId("init")
+(cid, cid.pod())
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[17]:
+: (<string CmdId: init>, 'init')
+:end:
+
+We can see the representation of the instance of a ~CmdId~ shows us:
+
+- the oschema "class" is /string/
+- the type of /string/ is ~CmdId~
+- the value held by the instance is ~init~
+
+And, the value itself can be pulled out as Plain Old Data (POD) via
+the ~.pod()~ method.  Instances of all "otypes" have this method.
+
+In ~ptipython~ (and ~ipython~) we may query the Python class representing
+the type for hints on how to use it.  For example, here is what
+~ptipython~ shows for ~cmd.CmdId?~
+
+#+begin_example
+In [11]: cmd.CmdId?
+Init signature: cmd.CmdId(val)
+Docstring:     
+String type CmdId.
+- pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+- format: None
+The command name.  FIXME: this should be an enum!
+#+end_example
+
+The documentation talks about a ~pattern~ and a ~format~ which are
+relevant for types of the schema class /string/.  If provided, these
+constraints are applied when we try to either construct or ~update()~ an
+instance of the /string/ schema class type.  Let's try to violate the
+~pattern~ constraint:
+
+#+begin_example
+cid.update("very bad")
+...
+ValidationError: 'very bad' does not match '^[a-zA-Z][a-zA-Z0-9_]*$'
+...
+ValueError: format mismatch for string CmdId
+#+end_example
+
+#+begin_note
+Typically, a ~ValueError~ will be raised if a constraint is violated.
+In the case of ~string~ schema class types, you may also see
+intermediate ~ValidationErrors~ which come from the JSON Schema
+validation code that does the heavy lifting.
+#+end_note
+
+* Examples
+
+Here we go through some examples of making instances of types of
+different schema classes.  We saw /string/ above so will skip it.
+
+** Boolean
+
+The simplest schema class is /boolean/.  The ~appfwk~ schema currently
+includes no examples.  We can however, create one from whole cloth by
+dropping down to ~moo~.
+
+#+begin_src ipython :session :exports both :results raw drawer
+  import moo
+  moo.otypes.make_type(schema="boolean", name="MyBool", doc="Example Boolean", path="test.junk")
+  from test.junk import MyBool
+  MyBool(True)
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[20]:
+: <boolean MyBool: True>
+:end:
+
+And, let the REPL show some docs:
+
+#+begin_example
+In [17]: MyBool?
+Init signature: MyBool(val)
+Docstring:     
+A MyBool boolean
+Example Boolean
+#+end_example
+
+#+begin_tip
+With ~moo~ /boolean/ types we may set them to various "truthy" and "falsie" values.  For example the POD string ~"yes"~ will register as ~True~.
+#+end_tip
+
+** Numbers
+
+Every type of ~appfwk~ queue has a "capacity" which we will provide from
+instances of the type ~QueueCapacity~ which is of the schema class
+/number/.
+
+#+begin_example
+In [12]: cmd.QueueCapacity?
+Init signature: cmd.QueueCapacity(val)
+Docstring:      A number type QueueCapacity
+#+end_example
+
+#+begin_warning
+While the ~moo~ schema class /number/ supports defining constraints, more
+work is needed for their actual implementation both at the
+representation level and in the generated Python "otypes".
+#+end_warning
+
+** Strings
+
+We saw an example of a /string/ schema class type ~CmdId~ above in the
+section [[Interrogating types]] so we will not repeat that here.
+
+
+** Enums
+
+An /enum/ is a string-like type that may take on a value from a predetermined set.  The defining schema may specify a default value from this set or if not given then the first value is taken as default.
+
+The ~appfwk~ schema uses an /enum/ type ~QueueKind~ to identity a "kind"
+of queue.  It's documentation:
+
+#+begin_example
+In [21]: cmd.QueueKind?
+Init signature: cmd.QueueKind(val=None)
+Docstring:     
+Enum type QueueKind [['Unknown', 'StdDeQueue', 'FollySPSCQueue', 'FollyMPMCQueue']]
+The kinds (types/classes) of queues
+#+end_example
+
+We can see the default value in action with a default construction:
+
+#+begin_src ipython :session :exports both :results raw drawer
+cmd.QueueKind()
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[77]:
+: <enum QueueKind: 'Unknown' of ['Unknown', 'StdDeQueue', 'FollySPSCQueue', 'FollyMPMCQueue']>
+:end:
+
+Let's try to break it:
+
+#+begin_example
+In [25]: cmd.QueueKind("MagicQueue")
+...
+ValueError: illegal enum QueueKind value MagicQueue
+#+end_example
+
+** Records
+
+The Python type which corresponds to a ~moo~ oschema class /record/ has
+some extra functionality to allow instances to mimic Python data
+objects while assuring type constraints.
+
+One simple record in the ~appfwk~ command schema is ~QueueSpec~.  Let's
+let the REPL tell us about it:
+
+#+begin_example
+In [19]: cmd.QueueSpec?
+Init signature:
+cmd.QueueSpec(
+    *args,
+    kind: dunedaq.appfwk.cmd.QueueKind = 'Unknown',
+    inst: dunedaq.appfwk.cmd.InstName = None,
+    capacity: dunedaq.appfwk.cmd.QueueCapacity = None,
+)
+Docstring:     
+Record type QueueSpec with fields: "kind", "inst", "capacity"
+
+Queue specification
+#+end_example
+
+We see that ~kind~ is a ~QueueKind~, introduced previously, and that the
+default value for this /enum/ has been forwarded to be a default value
+for the field.  This is a special handling for /enum/ fields.  The
+schema could have set a field default different than the /enum/ default.
+
+The ~appfwk~ schema happens to not provide defaults for the other two
+fields: ~inst~ of a /string/ type ~InstName~ and ~capacity~ a /number/ type and
+also introduced previously.  We must provide at least these latter two
+at some point to have a fully constructed instance of the type
+~QueueSpec~.  Let's start by making an instance with just the ~capacity~
+/record/ field given.
+
+#+begin_src ipython :session :exports both :results raw drawer
+qs = cmd.QueueSpec(capacity=10)
+(qs, qs.kind, qs.capacity)
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[26]:
+: (<record QueueSpec, fields: {kind, inst, capacity}>, 'Unknown', 10)
+:end:
+
+#+begin_note
+Accessing an attribute of an instance of a /record/ type results in POD.
+Likewise, one may use POD to set an attribute as long as the value is
+consistent with the associated field type.  One may also provide an
+instance of a consistent schema class type in setting an attribute.
+#+end_note
+
+If we try to get the ~qs.inst~ attribute or call ~qs.pod()~ (which will
+try to access all required attributes) at this time we will get an
+error as the record is not yet complete.
+
+#+begin_example
+print(qs.inst)
+...
+AttributeError: no such attribute inst
+#+end_example
+
+Let's set that last attribute now:
+
+#+begin_src ipython :session :exports both :results raw drawer
+qs.inst = "hose"
+qs.pod()
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[29]:
+: {'kind': 'Unknown', 'inst': 'hose', 'capacity': 10}
+:end:
+
+Records follow [[https://en.wikipedia.org/wiki/Robustness_principle][Postel's law]] by being "generous in what they accept and
+strict in what they produce".  This allows us to delay filling in all
+the required fields and relying on defaults where desired.  As we saw,
+strictness comes in when accessing the values of the /record/ type
+instance.
+
+However, when explicitly setting a value, the /record/ type instance will
+be strict so that no "illegal" values will be accepted.  The type
+~InstName~ can not be just any string but must be short identifier such
+as might be a valid variable name in a C-like syntax.  Let's try to
+break it:
+
+#+begin_example
+In [30]: qs.inst = "very wrong"
+...
+ValidationError: 'very wrong' does not match '^[a-zA-Z][a-zA-Z0-9_]*$'
+...
+ValueError: format mismatch for string InstName
+#+end_example
+
+Like with the /string/ example above, setting the field of a /record/
+which is itself a string needs to be done properly.
+
+** Sequences
+
+A /sequence/ schema class models an ordered array or list of elements
+which are themselves each of the same type.  The ~appfwk~ schema has a
+type called ~QueueSpecs~ which, as the pluralized name implies, is a
+/sequence/ of /record/ type ~QueueSpec~ which we learned above.  Our REPL
+tells us:
+
+#+begin_example
+In [31]: cmd.QueueSpecs?
+Init signature: cmd.QueueSpecs(val)
+Docstring:     
+A QueueSpecs sequence holding type dunedaq.appfwk.cmd.QueueSpec.
+A sequence of QueueSpec
+#+end_example
+
+Let's make one with as single item of type ~QueueSpec~.
+
+#+begin_src ipython :session :exports both :results raw drawer
+qs = cmd.QueueSpec(capacity=10, inst="hose")
+qss = cmd.QueueSpecs([qs])
+(qss, qss.pod())
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[55]:
+#+BEGIN_EXAMPLE
+  (<sequence QueueSpecs 1:[dunedaq.appfwk.cmd.QueueSpec]>,
+  [{'kind': 'Unknown', 'inst': 'hose', 'capacity': 10}])
+#+END_EXAMPLE
+:end:
+
+A /sequence/ type instance may be empty:
+
+#+begin_src ipython :session :exports both :results raw drawer
+qss = cmd.QueueSpecs([])
+(qss, qss.pod())
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[58]:
+: (<sequence QueueSpecs 0:[dunedaq.appfwk.cmd.QueueSpec]>, [])
+:end:
+
+And, later updated:
+
+#+begin_src ipython :session :exports both :results raw drawer
+qss.update([qs])
+(qss, qss.pod())
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[57]:
+#+BEGIN_EXAMPLE
+  (<sequence QueueSpecs 1:[dunedaq.appfwk.cmd.QueueSpec]>,
+  [{'kind': 'Unknown', 'inst': 'hose', 'capacity': 10}])
+#+END_EXAMPLE
+:end:
+
+#+begin_warning
+Some changes may still be made to /sequence/ schema class such as setting constraints on the size of the sequence.  The Python /sequence/ types may also be modified to allow ~list~-like mutation operations such as ~append()~.  For now, a /sequence/ type in Python treats its data as atomic.
+#+end_warning
+
+** Anys 
+
+An /any/ type is a simple form of a dynamic type.  It is *kind of* like a
+~void*~ in C or a pointer to a polymorphic base class in C++ but there
+is a twist.  Two different /any/ types are not compatible.  That is, an
+instance of /any/ type ~Data1~ can not be used to construct or update an
+instance of /any/ type ~Data2~.
+
+Another twist is that an instance of an /any/ type may only be
+constructed or updated with any other non-/any/ "otype" (or an instance
+of the same /any/ type) but not any POD.  Despite that, an instance of
+an /any/ type can still be turned into POD with the usual ~.pod()~ method.
+
+#+begin_note
+An /any/ type is used in a few places in the ~appfwk~ command schema
+because the internals of ~appfwk~ require layers of [[https://en.wikipedia.org/wiki/Type_erasure][type erasure]] so that
+different types of commands and of modules can be accommodated while
+retaining a generalized schema.  Without /any/ wholly new schema would
+have to be developed for every possible command type and every
+possible combination of module implementations.
+#+end_note
+
+In the ~appfwk~ schema, we currently have one catch-all /any/ type called ~Data~.
+
+#+begin_warning
+The current version of ~appfwk~ schema uses a *single* /any/ type called
+~Data~ for *every* point of type erasure.  Future versions of the schema
+may define multiple /any/ types in order to differentiate the different
+semantics.  For example, to differentiate ~Command.data~ from ~Init.data~.
+#+end_warning
+
+#+begin_example
+In [7]: cmd.Data?
+Init signature: cmd.Data(val)
+Docstring:     
+The any type Data.
+
+Can hold any oschema type except Any types that are not Data.
+
+An opaque object holding lower layer substructure
+#+end_example
+
+As above, we must use *some* schema type instance to set an /any/ type
+instance.  Here we use ~CmdId~ for simplicity.  In a "real" command
+object, the /any/ type Data tends to hold some larger /record/ type.
+
+#+begin_src ipython :session :exports both :results raw drawer
+d1 = cmd.Data(cmd.CmdId("conf"))
+d1.update(cmd.QueueKind("StdDeQueue"))
+d1.pod()
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[24]:
+: 'StdDeQueue'
+:end:
+
+Let's try to break it:
+
+#+begin_example
+In [23]: d2 = cmd.Data("this should not work")
+...
+ValueError: any type Data requires oschema type
+
+In [25]: moo.otypes.make_type(schema="any", name="Other", doc="Another any", path="test.junk")
+In [26]: from test.junk import Other
+In [28]: d3 = Other(d1)
+...
+ValueError: cross any updates not allowed
+#+end_example
+
+* Construct Commands
+
+The schema corresponding to the ~appfwk~ commands with IDs ~init~ and ~conf~
+are simple but take some work to construct.  Besides setting values
+which reside in fixed structure, their layers of type erasure (/any/
+types) allow for whole substructure to be provided in a parameterized
+manner.  We'll go through these two command objects separately.
+
+Regardless of the type of command object, the top level structure is
+provided by a simple schema with an ID and an /any/:
+
+#+begin_example
+In [29]: cmd.Command?
+Init signature:
+cmd.Command(
+    *args,
+    id: dunedaq.appfwk.cmd.CmdId = None,
+    data: dunedaq.appfwk.cmd.Data = None,
+)
+Docstring:     
+Record type Command with fields: "id", "data"
+
+Top-level command object structure
+#+end_example
+
+The ~data~ field should be populated with a subobject of a type that
+depends on the value of ~id~.
+
+** The ~init~ command
+
+The ~init~ command provides all the information to take a fully *generic*
+~appfwk~ application into one that has all of its queues and modules
+constructed.  The queues are also fully configured by this ~init~
+command.  The modules receive notice of the ~init~ and may even require
+custom ~init~ information but such is best left for ~conf~.
+
+The substructure for ~Command.data~ for an ~init~ command is a:
+
+#+begin_example
+In [30]: cmd.Init?
+Init signature:
+cmd.Init(
+    *args,
+    queues: dunedaq.appfwk.cmd.QueueSpecs = None,
+    modules: dunedaq.appfwk.cmd.ModSpecs = None,
+)
+Docstring:     
+Record type Init with fields: "queues", "modules"
+
+The app-level init command data object struction
+#+end_example
+
+The ~ModSpecs~ are new:
+
+#+begin_example
+In [32]: cmd.ModSpec?
+Init signature:
+cmd.ModSpec(
+    *args,
+    plugin: dunedaq.appfwk.cmd.PluginName = None,
+    inst: dunedaq.appfwk.cmd.InstName = None,
+    data: dunedaq.appfwk.cmd.Data = None,
+)
+Docstring:     
+Record type ModSpec with fields: "plugin", "inst", "data"
+
+Module specification
+#+end_example
+
+#+begin_note
+The /any/ ~Data~ type is seen again here.  It is used, in principle, to
+inject a module implementation specific object.  This is a "just in
+case" feature.  Most modules should get their custom information as
+part of their ~conf~ command object.
+#+end_note
+
+The simplest, and most boring, ~init~ command:
+
+#+begin_src ipython :session :exports both :results raw drawer
+myinit = cmd.Command(id=cmd.CmdId("init"), data=cmd.Init(queues=[], modules=[]))
+myinit.pod()
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[121]:
+: {'id': 'init', 'data': {'queues': [], 'modules': []}}
+:end:
+
+That code has some redundancies so we can replace it with a little helper:
+
+#+begin_src ipython :session :exports both :results raw drawer
+import ddcmd
+myinit = ddcmd.init()
+myinit.pod()
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[124]:
+: {'id': 'init', 'data': {'queues': [], 'modules': []}}
+:end:
+
+As such, this ~init~ command would initialize an "empty" and rather
+useless app instance.  The next two sections describe how to make the
+queue and module sequences with a working example.
+
+*** Queue initialization
+
+An ~appfwk~ queue is initialized with a ~QueueSpec~ which we introduced
+already.  The only new thing to know is that a queue ~inst~ field
+(instance name) must used be also in *two* places in the module init
+objects.  That is, one or two modules need to know the queue name in
+order to attach to its two endpoints.  
+
+Keeping things simple, we make just one queue named ~"host"~:
+
+#+begin_src ipython :session :exports both :results raw drawer
+queues = cmd.QueueSpecs([
+  cmd.QueueSpec(kind='StdDeQueue', inst="hose", capacity=10)])
+queues.pod()
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[129]:
+: [{'kind': 'StdDeQueue', 'inst': 'hose', 'capacity': 10}]
+:end:
+
+*** Module initialized
+
+An ~appfwk~ module is initialized with a ~ModSpec~, introduced above.
+Here, we give initialization for the two "fake" test modules provided
+by ~appfwk/test/~.
+
+#+begin_src ipython :session :exports both :results raw drawer
+modules = cmd.ModSpecs([
+  cmd.ModSpec(inst="source", plugin="FakeDataProducerDAQModule",
+    data=cmd.QueueInfo(inst="hose", name="output", dir="output")),
+  cmd.ModSpec(inst="sink", plugin="FakeDataConsumerDAQModule",
+    data=cmd.QueueInfo(inst="host", name="input", dir="input"))])
+modules.pod()
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[130]:
+#+BEGIN_EXAMPLE
+  [{'plugin': 'FakeDataProducerDAQModule',
+  'inst': 'source',
+  'data': {'inst': 'hose', 'name': 'output', 'dir': 'output'}},
+  {'plugin': 'FakeDataConsumerDAQModule',
+  'inst': 'sink',
+  'data': {'inst': 'host', 'name': 'input', 'dir': 'input'}}]
+#+END_EXAMPLE
+:end:
+
+** Putting ~init~ together
+
+Let's use the little ~ddcmd.init()~ helper again to build a full ~init~ command.
+
+#+begin_src ipython :session :exports both :results raw drawer
+import ddcmd
+myinit = ddcmd.init(queues=queues, modules=modules)
+myinit.pod()
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[131]:
+#+BEGIN_EXAMPLE
+  {'id': 'init',
+  'data': {'queues': [{'kind': 'StdDeQueue', 'inst': 'hose', 'capacity': 10}],
+  'modules': [{'plugin': 'FakeDataProducerDAQModule',
+  'inst': 'source',
+  'data': {'inst': 'hose', 'name': 'output', 'dir': 'output'}},
+  {'plugin': 'FakeDataConsumerDAQModule',
+  'inst': 'sink',
+  'data': {'inst': 'host', 'name': 'input', 'dir': 'input'}}]}}
+#+END_EXAMPLE
+:end:
+
+
+** The ~conf~ command
+
+The ~conf~ command's /any/ typed ~.data~ holds module-level configuration
+(sub) objects in a ~.modules~ attribute.  This attribute is of types
+~AddressedCmds~ which is a /sequence/ of ~AddressedCmd~.
+
+#+begin_example
+In [14]: cmd.AddressedCmd?
+Init signature:
+cmd.AddressedCmd(
+    *args,
+    match: dunedaq.appfwk.cmd.Match = None,
+    data: dunedaq.appfwk.cmd.Data = None,
+)
+Docstring:     
+Record type AddressedCmd with fields: "match", "data"
+
+General, non-init module-level command data structure
+#+end_example
+
+The ~Match~ type is a string to provide a regular expression.  All that
+match will receive the object held in the /any/ type ~.data~.  For this
+~conf~ command we will explicitly match the module names.
+
+#+begin_warning
+Currently ~Match~ allows any string.  Future work may improve this type
+by providing a ~pattern~ which would be a regex that matches regex,
+dawg.  For now, it relies on care.
+#+end_warning
+
+A skeleton for making the ~conf~ command object might look like:
+
+#+begin_example
+cmd.AddressedCmds([
+  cmd.AddressedCmd(match="source", data=...),
+  cmd.AddressedCmd(match="sink", data=...)])
+#+end_example
+
+We now turn to making the module-specific configuration objects.
+
+*** Module configuration objects
+
+Each ~appfwk~ module implementation (ie, the C++ subclass of ~DAQModule~)
+defines its own configuration object schema.
+
+#+begin_tip
+Help on defining module configuration object schema can be found in
+~appfwk/schema/README.org~ or online [[https://brettviren.github.io/moo/dunedaq-appfwk-schema.html][here]].
+#+end_tip
+
+As we did with the general ~appfwk~ level schema we must load the
+module-level schema so that we may use corresponding Python types:
+
+#+begin_src ipython :session :exports both :results raw drawer
+import ddcmd
+types = dict()
+for mod in ["fdp", "fdc"]:
+    schema = ddcmd.load_oschema(f"appfwk-{mod}-schema.jsonnet")
+    these = ddcmd.make_otypes(schema)
+    types.update(these)
+types
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[155]:
+#+BEGIN_EXAMPLE
+  {'dunedaq.appfwk.fdp.Size': dunedaq.appfwk.fdp.Size,
+  'dunedaq.appfwk.fdp.Count': dunedaq.appfwk.fdp.Count,
+  'dunedaq.appfwk.fdp.Conf': dunedaq.appfwk.fdp.Conf,
+  'dunedaq.appfwk.fdc.Size': dunedaq.appfwk.fdc.Size,
+  'dunedaq.appfwk.fdc.Count': dunedaq.appfwk.fdc.Count,
+  'dunedaq.appfwk.fdc.Conf': dunedaq.appfwk.fdc.Conf}
+#+END_EXAMPLE
+:end:
+
+#+begin_note
+Note the different ~path~ attribute of the two schema are reflected into the Python module namespace.
+#+end_note
+
+#+begin_src ipython :session :exports both :results raw drawer
+from dunedaq.appfwk import fdp
+from dunedaq.appfwk import fdc
+fdc.Conf()
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[161]:
+: <record Conf, fields: {nIntsPerVector, starting_int, ending_int, queue_timeout_ms}>
+:end:
+
+For both modules, the ~Conf~ type may be used to create the module-level
+configuration object and both are similarly structured.  Here is the
+producer:
+
+#+begin_example
+In [24]: fdp.Conf?
+Init signature:
+fdp.Conf(
+    *args,
+    nIntsPerVector: dunedaq.appfwk.fdp.Size = 10,
+    starting_int: dunedaq.appfwk.fdp.Count = -4,
+    ending_int: dunedaq.appfwk.fdp.Count = 14,
+    queue_timeout_ms: dunedaq.appfwk.fdp.Count = 100,
+    wait_between_sends_ms: dunedaq.appfwk.fdp.Count = 1000,
+)
+Docstring:     
+Record type Conf with fields: "nIntsPerVector", "starting_int", "ending_int", "queue_timeout_ms", "wait_between_sends_ms"
+
+Fake Data Producer DAQ Module Configuration
+#+end_example
+
+Both happen to provide defaults so that their default construction
+results in a fully specified /record/ type instance.  We can thus fill
+in the skeleton simply:
+
+#+begin_src ipython :session :exports both :results raw drawer
+ac = cmd.Command(id="conf", data=cmd.AddressedCmds([
+  cmd.AddressedCmd(match="source", data=fdp.Conf()),
+  cmd.AddressedCmd(match="sink", data=fdc.Conf())]))
+ac.pod()
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[164]:
+#+BEGIN_EXAMPLE
+  {'id': 'conf',
+  'data': [{'match': 'source',
+  'data': {'nIntsPerVector': 10,
+  'starting_int': -4,
+  'ending_int': 14,
+  'queue_timeout_ms': 100,
+  'wait_between_sends_ms': 1000}},
+  {'match': 'sink',
+  'data': {'nIntsPerVector': 10,
+  'starting_int': -4,
+  'ending_int': 14,
+  'queue_timeout_ms': 100}}]}
+#+END_EXAMPLE
+:end:
+
+Like with ~init~ we may provide a little helper:
+
+#+begin_src ipython :session :exports both :results raw drawer
+myconf = ddcmd.conf([
+  cmd.AddressedCmd(match="source", data=fdp.Conf()),
+  cmd.AddressedCmd(match="sink", data=fdc.Conf())])
+myconf
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[168]:
+: <record Command, fields: {id, data}>
+:end:
+
+* Command delivery
+
+Various means for delivery of commands to ~appfwk~ applications are in
+development.  An initial approach is to use the same interactive REPL
+that we used to build the command objects.  This is described in
+[[file:ddrepl.org]].
+
+* Internals

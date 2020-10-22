@@ -1,0 +1,1447 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-10-22 Thu 11:01 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DUNE DAQ Command Object Creation</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Brett Viren" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/styles/readtheorg/css/readtheorg.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/styles/readtheorg/js/readtheorg.js"></script>
+<style> #content{max-width:1800px;}</style>
+<style> p{max-width:800px;}</style>
+<style> li{max-width:800px;}</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2020 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">DUNE DAQ Command Object Creation</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orge1344f8">Introduction</a></li>
+<li><a href="#orgd26ee87">Setup</a></li>
+<li><a href="#org067379c">Quick Start</a></li>
+<li><a href="#org9b8f095">Loading types</a></li>
+<li><a href="#orgf349d82">Interrogating types</a></li>
+<li><a href="#org765048d">Examples</a>
+<ul>
+<li><a href="#orgb64acde">Boolean</a></li>
+<li><a href="#org12ad49e">Numbers</a></li>
+<li><a href="#orgce95079">Strings</a></li>
+<li><a href="#org517495b">Enums</a></li>
+<li><a href="#orge51e1be">Records</a></li>
+<li><a href="#orge51129f">Sequences</a></li>
+<li><a href="#org738c38a">Anys</a></li>
+</ul>
+</li>
+<li><a href="#org57f5cd7">Construct Commands</a>
+<ul>
+<li><a href="#org162f155">The <code>init</code> command</a></li>
+<li><a href="#org16116b8">Putting <code>init</code> together</a></li>
+<li><a href="#org401dd16">The <code>conf</code> command</a></li>
+</ul>
+</li>
+<li><a href="#org89478e4">Command delivery</a></li>
+<li><a href="#org6b4e26a">Internals</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orge1344f8" class="outline-2">
+<h2 id="orge1344f8">Introduction</h2>
+<div class="outline-text-2" id="text-orge1344f8">
+<p>
+DUNE DAQ command objects must rigorously follow a defined schema.
+From this schema, C++, Python and other artifacts are generated using
+a command line tool or its Python package both called <a href="https://brettviren.github.io/moo">moo</a>.  With the
+module, <code>moo</code> may generate Python object types ("otypes") from <code>moo</code>
+"oschema" (object schema) files.  These Python types are strongly
+typed (for Python) and help to guide an editor to produce objects
+which are valid by construction.  The types are also instrumented with
+docstrings and other things to assist the human using an interactive
+REPL, such as <code>ipython</code> or <code>ptipython</code>, to interactively discover how to
+use them.
+</p>
+
+<p>
+This document goes through some of the features of <code>moo</code> otypes.  It
+starts with some initial setup instructions and a "quick start" to
+make some commands while putting aside any explanation.  The remaining
+sections give information useful in making your own command objects.
+They describe how to load schema and from schema create Python types
+and interrogate those types to learn how to make instances.  It then
+gives a tour of the schema classes with example types from <code>appfwk</code>
+schema.  Penultimate section describes the construction utilities used
+in the quick start and finally some description is given of the
+internals of the Python type generator.
+</p>
+
+<div class="tip">
+<p>
+Some <code>moo</code> nomenclature is used in this document.  A <code>moo</code> schema consists
+of instances of class in a fixed set of <b>schema classes</b>.  These are
+<i>boolean</i>, <i>string</i>, <i>number</i>, <i>enum</i>, <i>sequence</i>, <i>record</i> and <i>any</i>.  An instance
+of one of these classes is called a <b>type</b> which is known as by its <b>type
+name</b> and which is a leaf in a namespace located through a <b>type path</b>.
+In the schema, a <b>type</b> is a (meta) data structure which may then be
+represented in or transformed to native programming language forms.
+For example, in C++ a type is used to <b>generate</b> code for a C++ <code>struct</code>.
+In Python, the type is used to dynamically create a Python <code>class</code>.
+From the native linage types we may finally an instance of a <b>type</b> aka
+an <b>object</b>.
+</p>
+
+<p>
+We will also describe data types expressed in the native programming
+language as "Plain Old Data" or POD.  
+</p>
+
+<p>
+Thus, we may say: a <i>string</i> schema class type <code>Email</code> produces an object
+which holds the POD string <code>"bv@bnl.gov"</code>.
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgd26ee87" class="outline-2">
+<h2 id="orgd26ee87">Setup</h2>
+<div class="outline-text-2" id="text-orgd26ee87">
+<p>
+We need to install <code>moo</code> and some nice REPL (here, we recommend <code>ptipython</code>)
+</p>
+
+<pre class="example">
+$ python3.8 -m venv venv
+$ source venv/bin/activate
+$ pip install git+git://github.com/brettviren/moo.git#egg=moo
+$ pip install ptipython
+</pre>
+
+<p>
+Let's also clone this repository and that of <code>appfwk</code>.
+</p>
+
+<div class="note">
+<p>
+We clone <code>appfwk</code> here in order to access its <code>schema/</code> directory.  If you
+have <code>appfwk</code> installed as a package you may already have access to this
+directory and can then skip the explicit cloning.  Set <code>MOO_MODULE_PATH</code> if needed. 
+</p>
+
+</div>
+
+<pre class="example">
+$ git clone https://github.com/dune-daq/appfwk.git
+$ export MOO_MODULE_PATH=$(pwd)/appfwk/schema
+$ git clone https://github.com/brettviren/dune-daq-repl.git
+</pre>
+
+<p>
+From now on we will run the Python REPL from inside <code>dune-daq-repl/</code>
+</p>
+
+<pre class="example">
+$ cd dune-daq-repl/
+$ ptipython
+Python 3.8.0 (default, Oct 28 2019, 16:14:01) 
+Type 'copyright', 'credits' or 'license' for more information
+IPython 7.18.1 -- An enhanced Interactive Python. Type '?' for help.
+
+In [1]: import dd
+                  ddcmd 
+                  ddrepl
+</pre>
+
+<p>
+Here, in a poor, uncolored ASCII facsimile, shows some of the nice REPL
+features that <code>ptipython</code> provides.  The last two lines are a drop-down
+menu of modules matching an initial <code>dd</code> typing.  <code>Ctrl-n</code> to highlight
+<code>ddcmd</code> and <code>Enter</code> to select.
+</p>
+
+<div class="tip">
+<p>
+This document is made in Emacs orgmode using <code>ob-ipython</code>.  It may be reproduced after also running: <code>pip install ipython jupyter</code> and editing <code>ddcmd.org</code> from an instance of <code>emacs</code> started from the Python environment.
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-org067379c" class="outline-2">
+<h2 id="org067379c">Quick Start</h2>
+<div class="outline-text-2" id="text-org067379c">
+<p>
+This section shows how to create one particular sequence of command
+objects while leaving aside any explanation.  The remainder of the
+document will fill in the background information.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #b4fa70;">import</span> ddcmd
+
+<span style="color: #b4fa70;">for</span> mod <span style="color: #b4fa70;">in</span> [<span style="color: #e9b96e;">"cmd"</span>, <span style="color: #e9b96e;">"fdp"</span>, <span style="color: #e9b96e;">"fdc"</span>]:
+    <span style="color: #fcaf3e;">schema</span> = ddcmd.load_oschema(f<span style="color: #e9b96e;">"appfwk-{mod}-schema.jsonnet"</span>)
+    <span style="color: #fcaf3e;">these</span> = ddcmd.make_otypes(schema)
+
+<span style="color: #fcaf3e;">queues</span> = cmd.QueueSpecs([
+  cmd.QueueSpec(kind=<span style="color: #e9b96e;">'StdDeQueue'</span>, inst=<span style="color: #e9b96e;">"hose"</span>, capacity=10)])
+<span style="color: #fcaf3e;">modules</span> = cmd.ModSpecs([
+  cmd.ModSpec(inst=<span style="color: #e9b96e;">"source"</span>, plugin=<span style="color: #e9b96e;">"FakeDataProducerDAQModule"</span>,
+    data=cmd.QueueInfo(inst=<span style="color: #e9b96e;">"hose"</span>, name=<span style="color: #e9b96e;">"output"</span>, <span style="color: #e090d7;">dir</span>=<span style="color: #e9b96e;">"output"</span>)),
+  cmd.ModSpec(inst=<span style="color: #e9b96e;">"sink"</span>, plugin=<span style="color: #e9b96e;">"FakeDataConsumerDAQModule"</span>,
+    data=cmd.QueueInfo(inst=<span style="color: #e9b96e;">"host"</span>, name=<span style="color: #e9b96e;">"input"</span>, <span style="color: #e090d7;">dir</span>=<span style="color: #e9b96e;">"input"</span>))])
+<span style="color: #fcaf3e;">myinit</span> = ddcmd.init(queues=queues, modules=modules)
+
+<span style="color: #fcaf3e;">myconf</span> = ddcmd.conf([
+  cmd.AddressedCmd(match=<span style="color: #e9b96e;">"source"</span>, data=fdp.Conf()),
+  cmd.AddressedCmd(match=<span style="color: #e9b96e;">"sink"</span>, data=fdc.Conf())])
+
+[myinit, myconf]
+</pre>
+</div>
+
+<pre class="example">
+[&lt;record Command, fields: {id, data}&gt;, &lt;record Command, fields: {id, data}&gt;]
+</pre>
+
+<p>
+This produces two command objects, one to initialize and one to
+configure.  These can be fed to the <code>appfwk</code> app <code>daq_application</code>.  Other
+commands exist (eg, <code>start</code> and <code>stop</code>).
+</p>
+
+<p>
+Read on for explanation on what this quick start is doing and how to
+learn to use the Python types to make your own command objects.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org9b8f095" class="outline-2">
+<h2 id="org9b8f095">Loading types</h2>
+<div class="outline-text-2" id="text-org9b8f095">
+<p>
+To get Python types with which we may construct objects we first load
+a schema:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #b4fa70;">import</span> ddcmd
+<span style="color: #fcaf3e;">schema</span> = ddcmd.load_oschema(<span style="color: #e9b96e;">"appfwk-cmd-schema.jsonnet"</span>)
+<span style="color: #fcaf3e;">types</span> = ddcmd.make_otypes(schema)
+types
+</pre>
+</div>
+
+<pre class="example">
+{'dunedaq.appfwk.cmd.Match': dunedaq.appfwk.cmd.Match,
+'dunedaq.appfwk.cmd.Data': dunedaq.appfwk.cmd.Data,
+'dunedaq.appfwk.cmd.AddressedCmd': dunedaq.appfwk.cmd.AddressedCmd,
+'dunedaq.appfwk.cmd.AddressedCmds': dunedaq.appfwk.cmd.AddressedCmds,
+'dunedaq.appfwk.cmd.CmdId': dunedaq.appfwk.cmd.CmdId,
+'dunedaq.appfwk.cmd.CmdObj': dunedaq.appfwk.cmd.CmdObj,
+'dunedaq.appfwk.cmd.Command': dunedaq.appfwk.cmd.Command,
+'dunedaq.appfwk.cmd.QueueKind': dunedaq.appfwk.cmd.QueueKind,
+'dunedaq.appfwk.cmd.InstName': dunedaq.appfwk.cmd.InstName,
+'dunedaq.appfwk.cmd.QueueCapacity': dunedaq.appfwk.cmd.QueueCapacity,
+'dunedaq.appfwk.cmd.QueueSpec': dunedaq.appfwk.cmd.QueueSpec,
+'dunedaq.appfwk.cmd.QueueSpecs': dunedaq.appfwk.cmd.QueueSpecs,
+'dunedaq.appfwk.cmd.PluginName': dunedaq.appfwk.cmd.PluginName,
+'dunedaq.appfwk.cmd.ModSpec': dunedaq.appfwk.cmd.ModSpec,
+'dunedaq.appfwk.cmd.ModSpecs': dunedaq.appfwk.cmd.ModSpecs,
+'dunedaq.appfwk.cmd.Init': dunedaq.appfwk.cmd.Init,
+'dunedaq.appfwk.cmd.Label': dunedaq.appfwk.cmd.Label,
+'dunedaq.appfwk.cmd.QueueDir': dunedaq.appfwk.cmd.QueueDir,
+'dunedaq.appfwk.cmd.QueueInfo': dunedaq.appfwk.cmd.QueueInfo,
+'dunedaq.appfwk.cmd.QueueInfos': dunedaq.appfwk.cmd.QueueInfos,
+'dunedaq.appfwk.cmd.ModInit': dunedaq.appfwk.cmd.ModInit}
+</pre>
+
+<p>
+The <code>schema</code> variable holds a data structure representing a <code>moo</code>
+"oschema" (object schema) which is then turned into a set of Python
+types by the <code>make_otypes()</code> function.  It happens to return a
+dictionary mapping fully-qualified type name to type (<code>class</code>) and these
+types are also made into first-class Python types in a module
+hierarchy.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgf349d82" class="outline-2">
+<h2 id="orgf349d82">Interrogating types</h2>
+<div class="outline-text-2" id="text-orgf349d82">
+<p>
+As an example, let's look at one of the most trivial types in the
+<code>appfwk</code> schema, a <code>CmdId</code>.
+</p>
+
+<div class="warning">
+<p>
+The <code>CmdId</code> is meant to name a command type.  It currently allows a
+fairly free string.  At some point it may allow to take one of an
+enumerated list.
+</p>
+
+</div>
+
+<p>
+First, we import the Python namespace holding all our types and make
+an instance of <code>CmdId</code>.  We'll see how we know what we had to provide
+next.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #b4fa70;">from</span> dunedaq.appfwk <span style="color: #b4fa70;">import</span> cmd
+<span style="color: #fcaf3e;">cid</span> = cmd.CmdId(<span style="color: #e9b96e;">"init"</span>)
+(cid, cid.pod())
+</pre>
+</div>
+
+<pre class="example">
+(&lt;string CmdId: init&gt;, 'init')
+</pre>
+
+<p>
+We can see the representation of the instance of a <code>CmdId</code> shows us:
+</p>
+
+<ul class="org-ul">
+<li>the oschema "class" is <i>string</i></li>
+<li>the type of <i>string</i> is <code>CmdId</code></li>
+<li>the value held by the instance is <code>init</code></li>
+</ul>
+
+<p>
+And, the value itself can be pulled out as Plain Old Data (POD) via
+the <code>.pod()</code> method.  Instances of all "otypes" have this method.
+</p>
+
+<p>
+In <code>ptipython</code> (and <code>ipython</code>) we may query the Python class representing
+the type for hints on how to use it.  For example, here is what
+<code>ptipython</code> shows for <code>cmd.CmdId?</code>
+</p>
+
+<pre class="example">
+In [11]: cmd.CmdId?
+Init signature: cmd.CmdId(val)
+Docstring:     
+String type CmdId.
+- pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+- format: None
+The command name.  FIXME: this should be an enum!
+</pre>
+
+<p>
+The documentation talks about a <code>pattern</code> and a <code>format</code> which are
+relevant for types of the schema class <i>string</i>.  If provided, these
+constraints are applied when we try to either construct or <code>update()</code> an
+instance of the <i>string</i> schema class type.  Let's try to violate the
+<code>pattern</code> constraint:
+</p>
+
+<pre class="example">
+cid.update("very bad")
+...
+ValidationError: 'very bad' does not match '^[a-zA-Z][a-zA-Z0-9_]*$'
+...
+ValueError: format mismatch for string CmdId
+</pre>
+
+<div class="note">
+<p>
+Typically, a <code>ValueError</code> will be raised if a constraint is violated.
+In the case of <code>string</code> schema class types, you may also see
+intermediate <code>ValidationErrors</code> which come from the JSON Schema
+validation code that does the heavy lifting.
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-org765048d" class="outline-2">
+<h2 id="org765048d">Examples</h2>
+<div class="outline-text-2" id="text-org765048d">
+<p>
+Here we go through some examples of making instances of types of
+different schema classes.  We saw <i>string</i> above so will skip it.
+</p>
+</div>
+
+<div id="outline-container-orgb64acde" class="outline-3">
+<h3 id="orgb64acde">Boolean</h3>
+<div class="outline-text-3" id="text-orgb64acde">
+<p>
+The simplest schema class is <i>boolean</i>.  The <code>appfwk</code> schema currently
+includes no examples.  We can however, create one from whole cloth by
+dropping down to <code>moo</code>.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #b4fa70;">import</span> moo
+moo.otypes.make_type(schema=<span style="color: #e9b96e;">"boolean"</span>, name=<span style="color: #e9b96e;">"MyBool"</span>, doc=<span style="color: #e9b96e;">"Example Boolean"</span>, path=<span style="color: #e9b96e;">"test.junk"</span>)
+<span style="color: #b4fa70;">from</span> test.junk <span style="color: #b4fa70;">import</span> MyBool
+MyBool(<span style="color: #e9b2e3;">True</span>)
+</pre>
+</div>
+
+<pre class="example">
+&lt;boolean MyBool: True&gt;
+</pre>
+
+<p>
+And, let the REPL show some docs:
+</p>
+
+<pre class="example">
+In [17]: MyBool?
+Init signature: MyBool(val)
+Docstring:     
+A MyBool boolean
+Example Boolean
+</pre>
+
+<div class="tip">
+<p>
+With <code>moo</code> <i>boolean</i> types we may set them to various "truthy" and "falsie" values.  For example the POD string <code>"yes"</code> will register as <code>True</code>.
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-org12ad49e" class="outline-3">
+<h3 id="org12ad49e">Numbers</h3>
+<div class="outline-text-3" id="text-org12ad49e">
+<p>
+Every type of <code>appfwk</code> queue has a "capacity" which we will provide from
+instances of the type <code>QueueCapacity</code> which is of the schema class
+<i>number</i>.
+</p>
+
+<pre class="example">
+In [12]: cmd.QueueCapacity?
+Init signature: cmd.QueueCapacity(val)
+Docstring:      A number type QueueCapacity
+</pre>
+
+<div class="warning">
+<p>
+While the <code>moo</code> schema class <i>number</i> supports defining constraints, more
+work is needed for their actual implementation both at the
+representation level and in the generated Python "otypes".
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgce95079" class="outline-3">
+<h3 id="orgce95079">Strings</h3>
+<div class="outline-text-3" id="text-orgce95079">
+<p>
+We saw an example of a <i>string</i> schema class type <code>CmdId</code> above in the
+section <a href="#orgf349d82">Interrogating types</a> so we will not repeat that here.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-org517495b" class="outline-3">
+<h3 id="org517495b">Enums</h3>
+<div class="outline-text-3" id="text-org517495b">
+<p>
+An <i>enum</i> is a string-like type that may take on a value from a predetermined set.  The defining schema may specify a default value from this set or if not given then the first value is taken as default.
+</p>
+
+<p>
+The <code>appfwk</code> schema uses an <i>enum</i> type <code>QueueKind</code> to identity a "kind"
+of queue.  It's documentation:
+</p>
+
+<pre class="example">
+In [21]: cmd.QueueKind?
+Init signature: cmd.QueueKind(val=None)
+Docstring:     
+Enum type QueueKind [['Unknown', 'StdDeQueue', 'FollySPSCQueue', 'FollyMPMCQueue']]
+The kinds (types/classes) of queues
+</pre>
+
+<p>
+We can see the default value in action with a default construction:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython">cmd.QueueKind()
+</pre>
+</div>
+
+<pre class="example">
+&lt;enum QueueKind: 'Unknown' of ['Unknown', 'StdDeQueue', 'FollySPSCQueue', 'FollyMPMCQueue']&gt;
+</pre>
+
+<p>
+Let's try to break it:
+</p>
+
+<pre class="example">
+In [25]: cmd.QueueKind("MagicQueue")
+...
+ValueError: illegal enum QueueKind value MagicQueue
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orge51e1be" class="outline-3">
+<h3 id="orge51e1be">Records</h3>
+<div class="outline-text-3" id="text-orge51e1be">
+<p>
+The Python type which corresponds to a <code>moo</code> oschema class <i>record</i> has
+some extra functionality to allow instances to mimic Python data
+objects while assuring type constraints.
+</p>
+
+<p>
+One simple record in the <code>appfwk</code> command schema is <code>QueueSpec</code>.  Let's
+let the REPL tell us about it:
+</p>
+
+<pre class="example">
+In [19]: cmd.QueueSpec?
+Init signature:
+cmd.QueueSpec(
+    *args,
+    kind: dunedaq.appfwk.cmd.QueueKind = 'Unknown',
+    inst: dunedaq.appfwk.cmd.InstName = None,
+    capacity: dunedaq.appfwk.cmd.QueueCapacity = None,
+)
+Docstring:     
+Record type QueueSpec with fields: "kind", "inst", "capacity"
+
+Queue specification
+</pre>
+
+<p>
+We see that <code>kind</code> is a <code>QueueKind</code>, introduced previously, and that the
+default value for this <i>enum</i> has been forwarded to be a default value
+for the field.  This is a special handling for <i>enum</i> fields.  The
+schema could have set a field default different than the <i>enum</i> default.
+</p>
+
+<p>
+The <code>appfwk</code> schema happens to not provide defaults for the other two
+fields: <code>inst</code> of a <i>string</i> type <code>InstName</code> and <code>capacity</code> a <i>number</i> type and
+also introduced previously.  We must provide at least these latter two
+at some point to have a fully constructed instance of the type
+<code>QueueSpec</code>.  Let's start by making an instance with just the <code>capacity</code>
+<i>record</i> field given.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #fcaf3e;">qs</span> = cmd.QueueSpec(capacity=10)
+(qs, qs.kind, qs.capacity)
+</pre>
+</div>
+
+<pre class="example">
+(&lt;record QueueSpec, fields: {kind, inst, capacity}&gt;, 'Unknown', 10)
+</pre>
+
+<div class="note">
+<p>
+Accessing an attribute of an instance of a <i>record</i> type results in POD.
+Likewise, one may use POD to set an attribute as long as the value is
+consistent with the associated field type.  One may also provide an
+instance of a consistent schema class type in setting an attribute.
+</p>
+
+</div>
+
+<p>
+If we try to get the <code>qs.inst</code> attribute or call <code>qs.pod()</code> (which will
+try to access all required attributes) at this time we will get an
+error as the record is not yet complete.
+</p>
+
+<pre class="example">
+print(qs.inst)
+...
+AttributeError: no such attribute inst
+</pre>
+
+<p>
+Let's set that last attribute now:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #fcaf3e;">qs.inst</span> = <span style="color: #e9b96e;">"hose"</span>
+qs.pod()
+</pre>
+</div>
+
+<pre class="example">
+{'kind': 'Unknown', 'inst': 'hose', 'capacity': 10}
+</pre>
+
+<p>
+Records follow <a href="https://en.wikipedia.org/wiki/Robustness_principle">Postel's law</a> by being "generous in what they accept and
+strict in what they produce".  This allows us to delay filling in all
+the required fields and relying on defaults where desired.  As we saw,
+strictness comes in when accessing the values of the <i>record</i> type
+instance.
+</p>
+
+<p>
+However, when explicitly setting a value, the <i>record</i> type instance will
+be strict so that no "illegal" values will be accepted.  The type
+<code>InstName</code> can not be just any string but must be short identifier such
+as might be a valid variable name in a C-like syntax.  Let's try to
+break it:
+</p>
+
+<pre class="example">
+In [30]: qs.inst = "very wrong"
+...
+ValidationError: 'very wrong' does not match '^[a-zA-Z][a-zA-Z0-9_]*$'
+...
+ValueError: format mismatch for string InstName
+</pre>
+
+<p>
+Like with the <i>string</i> example above, setting the field of a <i>record</i>
+which is itself a string needs to be done properly.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orge51129f" class="outline-3">
+<h3 id="orge51129f">Sequences</h3>
+<div class="outline-text-3" id="text-orge51129f">
+<p>
+A <i>sequence</i> schema class models an ordered array or list of elements
+which are themselves each of the same type.  The <code>appfwk</code> schema has a
+type called <code>QueueSpecs</code> which, as the pluralized name implies, is a
+<i>sequence</i> of <i>record</i> type <code>QueueSpec</code> which we learned above.  Our REPL
+tells us:
+</p>
+
+<pre class="example">
+In [31]: cmd.QueueSpecs?
+Init signature: cmd.QueueSpecs(val)
+Docstring:     
+A QueueSpecs sequence holding type dunedaq.appfwk.cmd.QueueSpec.
+A sequence of QueueSpec
+</pre>
+
+<p>
+Let's make one with as single item of type <code>QueueSpec</code>.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #fcaf3e;">qs</span> = cmd.QueueSpec(capacity=10, inst=<span style="color: #e9b96e;">"hose"</span>)
+<span style="color: #fcaf3e;">qss</span> = cmd.QueueSpecs([qs])
+(qss, qss.pod())
+</pre>
+</div>
+
+<pre class="example">
+(&lt;sequence QueueSpecs 1:[dunedaq.appfwk.cmd.QueueSpec]&gt;,
+[{'kind': 'Unknown', 'inst': 'hose', 'capacity': 10}])
+</pre>
+
+<p>
+A <i>sequence</i> type instance may be empty:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #fcaf3e;">qss</span> = cmd.QueueSpecs([])
+(qss, qss.pod())
+</pre>
+</div>
+
+<pre class="example">
+(&lt;sequence QueueSpecs 0:[dunedaq.appfwk.cmd.QueueSpec]&gt;, [])
+</pre>
+
+<p>
+And, later updated:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython">qss.update([qs])
+(qss, qss.pod())
+</pre>
+</div>
+
+<pre class="example">
+(&lt;sequence QueueSpecs 1:[dunedaq.appfwk.cmd.QueueSpec]&gt;,
+[{'kind': 'Unknown', 'inst': 'hose', 'capacity': 10}])
+</pre>
+
+<div class="warning">
+<p>
+Some changes may still be made to <i>sequence</i> schema class such as setting constraints on the size of the sequence.  The Python <i>sequence</i> types may also be modified to allow <code>list</code>-like mutation operations such as <code>append()</code>.  For now, a <i>sequence</i> type in Python treats its data as atomic.
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-org738c38a" class="outline-3">
+<h3 id="org738c38a">Anys</h3>
+<div class="outline-text-3" id="text-org738c38a">
+<p>
+An <i>any</i> type is a simple form of a dynamic type.  It is <b>kind of</b> like a
+<code>void*</code> in C or a pointer to a polymorphic base class in C++ but there
+is a twist.  Two different <i>any</i> types are not compatible.  That is, an
+instance of <i>any</i> type <code>Data1</code> can not be used to construct or update an
+instance of <i>any</i> type <code>Data2</code>.
+</p>
+
+<p>
+Another twist is that an instance of an <i>any</i> type may only be
+constructed or updated with any other non-<i>any</i> "otype" (or an instance
+of the same <i>any</i> type) but not any POD.  Despite that, an instance of
+an <i>any</i> type can still be turned into POD with the usual <code>.pod()</code> method.
+</p>
+
+<div class="note">
+<p>
+An <i>any</i> type is used in a few places in the <code>appfwk</code> command schema
+because the internals of <code>appfwk</code> require layers of <a href="https://en.wikipedia.org/wiki/Type_erasure">type erasure</a> so that
+different types of commands and of modules can be accommodated while
+retaining a generalized schema.  Without <i>any</i> wholly new schema would
+have to be developed for every possible command type and every
+possible combination of module implementations.
+</p>
+
+</div>
+
+<p>
+In the <code>appfwk</code> schema, we currently have one catch-all <i>any</i> type called <code>Data</code>.
+</p>
+
+<div class="warning">
+<p>
+The current version of <code>appfwk</code> schema uses a <b>single</b> <i>any</i> type called
+<code>Data</code> for <b>every</b> point of type erasure.  Future versions of the schema
+may define multiple <i>any</i> types in order to differentiate the different
+semantics.  For example, to differentiate <code>Command.data</code> from <code>Init.data</code>.
+</p>
+
+</div>
+
+<pre class="example">
+In [7]: cmd.Data?
+Init signature: cmd.Data(val)
+Docstring:     
+The any type Data.
+
+Can hold any oschema type except Any types that are not Data.
+
+An opaque object holding lower layer substructure
+</pre>
+
+<p>
+As above, we must use <b>some</b> schema type instance to set an <i>any</i> type
+instance.  Here we use <code>CmdId</code> for simplicity.  In a "real" command
+object, the <i>any</i> type Data tends to hold some larger <i>record</i> type.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #fcaf3e;">d1</span> = cmd.Data(cmd.CmdId(<span style="color: #e9b96e;">"conf"</span>))
+d1.update(cmd.QueueKind(<span style="color: #e9b96e;">"StdDeQueue"</span>))
+d1.pod()
+</pre>
+</div>
+
+<pre class="example">
+'StdDeQueue'
+</pre>
+
+<p>
+Let's try to break it:
+</p>
+
+<pre class="example">
+In [23]: d2 = cmd.Data("this should not work")
+...
+ValueError: any type Data requires oschema type
+
+In [25]: moo.otypes.make_type(schema="any", name="Other", doc="Another any", path="test.junk")
+In [26]: from test.junk import Other
+In [28]: d3 = Other(d1)
+...
+ValueError: cross any updates not allowed
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org57f5cd7" class="outline-2">
+<h2 id="org57f5cd7">Construct Commands</h2>
+<div class="outline-text-2" id="text-org57f5cd7">
+<p>
+The schema corresponding to the <code>appfwk</code> commands with IDs <code>init</code> and <code>conf</code>
+are simple but take some work to construct.  Besides setting values
+which reside in fixed structure, their layers of type erasure (<i>any</i>
+types) allow for whole substructure to be provided in a parameterized
+manner.  We'll go through these two command objects separately.
+</p>
+
+<p>
+Regardless of the type of command object, the top level structure is
+provided by a simple schema with an ID and an <i>any</i>:
+</p>
+
+<pre class="example">
+In [29]: cmd.Command?
+Init signature:
+cmd.Command(
+    *args,
+    id: dunedaq.appfwk.cmd.CmdId = None,
+    data: dunedaq.appfwk.cmd.Data = None,
+)
+Docstring:     
+Record type Command with fields: "id", "data"
+
+Top-level command object structure
+</pre>
+
+<p>
+The <code>data</code> field should be populated with a subobject of a type that
+depends on the value of <code>id</code>.
+</p>
+</div>
+
+<div id="outline-container-org162f155" class="outline-3">
+<h3 id="org162f155">The <code>init</code> command</h3>
+<div class="outline-text-3" id="text-org162f155">
+<p>
+The <code>init</code> command provides all the information to take a fully <b>generic</b>
+<code>appfwk</code> application into one that has all of its queues and modules
+constructed.  The queues are also fully configured by this <code>init</code>
+command.  The modules receive notice of the <code>init</code> and may even require
+custom <code>init</code> information but such is best left for <code>conf</code>.
+</p>
+
+<p>
+The substructure for <code>Command.data</code> for an <code>init</code> command is a:
+</p>
+
+<pre class="example">
+In [30]: cmd.Init?
+Init signature:
+cmd.Init(
+    *args,
+    queues: dunedaq.appfwk.cmd.QueueSpecs = None,
+    modules: dunedaq.appfwk.cmd.ModSpecs = None,
+)
+Docstring:     
+Record type Init with fields: "queues", "modules"
+
+The app-level init command data object struction
+</pre>
+
+<p>
+The <code>ModSpecs</code> are new:
+</p>
+
+<pre class="example">
+In [32]: cmd.ModSpec?
+Init signature:
+cmd.ModSpec(
+    *args,
+    plugin: dunedaq.appfwk.cmd.PluginName = None,
+    inst: dunedaq.appfwk.cmd.InstName = None,
+    data: dunedaq.appfwk.cmd.Data = None,
+)
+Docstring:     
+Record type ModSpec with fields: "plugin", "inst", "data"
+
+Module specification
+</pre>
+
+<div class="note">
+<p>
+The <i>any</i> <code>Data</code> type is seen again here.  It is used, in principle, to
+inject a module implementation specific object.  This is a "just in
+case" feature.  Most modules should get their custom information as
+part of their <code>conf</code> command object.
+</p>
+
+</div>
+
+<p>
+The simplest, and most boring, <code>init</code> command:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #fcaf3e;">myinit</span> = cmd.Command(<span style="color: #e090d7;">id</span>=cmd.CmdId(<span style="color: #e9b96e;">"init"</span>), data=cmd.Init(queues=[], modules=[]))
+myinit.pod()
+</pre>
+</div>
+
+<pre class="example">
+{'id': 'init', 'data': {'queues': [], 'modules': []}}
+</pre>
+
+<p>
+That code has some redundancies so we can replace it with a little helper:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #b4fa70;">import</span> ddcmd
+<span style="color: #fcaf3e;">myinit</span> = ddcmd.init()
+myinit.pod()
+</pre>
+</div>
+
+<pre class="example">
+{'id': 'init', 'data': {'queues': [], 'modules': []}}
+</pre>
+
+<p>
+As such, this <code>init</code> command would initialize an "empty" and rather
+useless app instance.  The next two sections describe how to make the
+queue and module sequences with a working example.
+</p>
+</div>
+
+<div id="outline-container-orgcc28fb3" class="outline-4">
+<h4 id="orgcc28fb3">Queue initialization</h4>
+<div class="outline-text-4" id="text-orgcc28fb3">
+<p>
+An <code>appfwk</code> queue is initialized with a <code>QueueSpec</code> which we introduced
+already.  The only new thing to know is that a queue <code>inst</code> field
+(instance name) must used be also in <b>two</b> places in the module init
+objects.  That is, one or two modules need to know the queue name in
+order to attach to its two endpoints.  
+</p>
+
+<p>
+Keeping things simple, we make just one queue named <code>"host"</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #fcaf3e;">queues</span> = cmd.QueueSpecs([
+  cmd.QueueSpec(kind=<span style="color: #e9b96e;">'StdDeQueue'</span>, inst=<span style="color: #e9b96e;">"hose"</span>, capacity=10)])
+queues.pod()
+</pre>
+</div>
+
+<pre class="example">
+[{'kind': 'StdDeQueue', 'inst': 'hose', 'capacity': 10}]
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgd1dac0d" class="outline-4">
+<h4 id="orgd1dac0d">Module initialized</h4>
+<div class="outline-text-4" id="text-orgd1dac0d">
+<p>
+An <code>appfwk</code> module is initialized with a <code>ModSpec</code>, introduced above.
+Here, we give initialization for the two "fake" test modules provided
+by <code>appfwk/test/</code>.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #fcaf3e;">modules</span> = cmd.ModSpecs([
+  cmd.ModSpec(inst=<span style="color: #e9b96e;">"source"</span>, plugin=<span style="color: #e9b96e;">"FakeDataProducerDAQModule"</span>,
+    data=cmd.QueueInfo(inst=<span style="color: #e9b96e;">"hose"</span>, name=<span style="color: #e9b96e;">"output"</span>, <span style="color: #e090d7;">dir</span>=<span style="color: #e9b96e;">"output"</span>)),
+  cmd.ModSpec(inst=<span style="color: #e9b96e;">"sink"</span>, plugin=<span style="color: #e9b96e;">"FakeDataConsumerDAQModule"</span>,
+    data=cmd.QueueInfo(inst=<span style="color: #e9b96e;">"host"</span>, name=<span style="color: #e9b96e;">"input"</span>, <span style="color: #e090d7;">dir</span>=<span style="color: #e9b96e;">"input"</span>))])
+modules.pod()
+</pre>
+</div>
+
+<pre class="example">
+[{'plugin': 'FakeDataProducerDAQModule',
+'inst': 'source',
+'data': {'inst': 'hose', 'name': 'output', 'dir': 'output'}},
+{'plugin': 'FakeDataConsumerDAQModule',
+'inst': 'sink',
+'data': {'inst': 'host', 'name': 'input', 'dir': 'input'}}]
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org16116b8" class="outline-3">
+<h3 id="org16116b8">Putting <code>init</code> together</h3>
+<div class="outline-text-3" id="text-org16116b8">
+<p>
+Let's use the little <code>ddcmd.init()</code> helper again to build a full <code>init</code> command.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #b4fa70;">import</span> ddcmd
+<span style="color: #fcaf3e;">myinit</span> = ddcmd.init(queues=queues, modules=modules)
+myinit.pod()
+</pre>
+</div>
+
+<pre class="example">
+{'id': 'init',
+'data': {'queues': [{'kind': 'StdDeQueue', 'inst': 'hose', 'capacity': 10}],
+'modules': [{'plugin': 'FakeDataProducerDAQModule',
+'inst': 'source',
+'data': {'inst': 'hose', 'name': 'output', 'dir': 'output'}},
+{'plugin': 'FakeDataConsumerDAQModule',
+'inst': 'sink',
+'data': {'inst': 'host', 'name': 'input', 'dir': 'input'}}]}}
+</pre>
+</div>
+</div>
+
+
+<div id="outline-container-org401dd16" class="outline-3">
+<h3 id="org401dd16">The <code>conf</code> command</h3>
+<div class="outline-text-3" id="text-org401dd16">
+<p>
+The <code>conf</code> command's <i>any</i> typed <code>.data</code> holds module-level configuration
+(sub) objects in a <code>.modules</code> attribute.  This attribute is of types
+<code>AddressedCmds</code> which is a <i>sequence</i> of <code>AddressedCmd</code>.
+</p>
+
+<pre class="example">
+In [14]: cmd.AddressedCmd?
+Init signature:
+cmd.AddressedCmd(
+    *args,
+    match: dunedaq.appfwk.cmd.Match = None,
+    data: dunedaq.appfwk.cmd.Data = None,
+)
+Docstring:     
+Record type AddressedCmd with fields: "match", "data"
+
+General, non-init module-level command data structure
+</pre>
+
+<p>
+The <code>Match</code> type is a string to provide a regular expression.  All that
+match will receive the object held in the <i>any</i> type <code>.data</code>.  For this
+<code>conf</code> command we will explicitly match the module names.
+</p>
+
+<div class="warning">
+<p>
+Currently <code>Match</code> allows any string.  Future work may improve this type
+by providing a <code>pattern</code> which would be a regex that matches regex,
+dawg.  For now, it relies on care.
+</p>
+
+</div>
+
+<p>
+A skeleton for making the <code>conf</code> command object might look like:
+</p>
+
+<pre class="example">
+cmd.AddressedCmds([
+  cmd.AddressedCmd(match="source", data=...),
+  cmd.AddressedCmd(match="sink", data=...)])
+</pre>
+
+<p>
+We now turn to making the module-specific configuration objects.
+</p>
+</div>
+
+<div id="outline-container-orgab9588c" class="outline-4">
+<h4 id="orgab9588c">Module configuration objects</h4>
+<div class="outline-text-4" id="text-orgab9588c">
+<p>
+Each <code>appfwk</code> module implementation (ie, the C++ subclass of <code>DAQModule</code>)
+defines its own configuration object schema.
+</p>
+
+<div class="tip">
+<p>
+Help on defining module configuration object schema can be found in
+<code>appfwk/schema/README.org</code> or online <a href="https://brettviren.github.io/moo/dunedaq-appfwk-schema.html">here</a>.
+</p>
+
+</div>
+
+<p>
+As we did with the general <code>appfwk</code> level schema we must load the
+module-level schema so that we may use corresponding Python types:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #b4fa70;">import</span> ddcmd
+<span style="color: #fcaf3e;">types</span> = <span style="color: #e090d7;">dict</span>()
+<span style="color: #b4fa70;">for</span> mod <span style="color: #b4fa70;">in</span> [<span style="color: #e9b96e;">"fdp"</span>, <span style="color: #e9b96e;">"fdc"</span>]:
+    <span style="color: #fcaf3e;">schema</span> = ddcmd.load_oschema(f<span style="color: #e9b96e;">"appfwk-{mod}-schema.jsonnet"</span>)
+    <span style="color: #fcaf3e;">these</span> = ddcmd.make_otypes(schema)
+    types.update(these)
+types
+</pre>
+</div>
+
+<pre class="example">
+{'dunedaq.appfwk.fdp.Size': dunedaq.appfwk.fdp.Size,
+'dunedaq.appfwk.fdp.Count': dunedaq.appfwk.fdp.Count,
+'dunedaq.appfwk.fdp.Conf': dunedaq.appfwk.fdp.Conf,
+'dunedaq.appfwk.fdc.Size': dunedaq.appfwk.fdc.Size,
+'dunedaq.appfwk.fdc.Count': dunedaq.appfwk.fdc.Count,
+'dunedaq.appfwk.fdc.Conf': dunedaq.appfwk.fdc.Conf}
+</pre>
+
+<div class="note">
+<p>
+Note the different <code>path</code> attribute of the two schema are reflected into the Python module namespace.
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #b4fa70;">from</span> dunedaq.appfwk <span style="color: #b4fa70;">import</span> fdp
+<span style="color: #b4fa70;">from</span> dunedaq.appfwk <span style="color: #b4fa70;">import</span> fdc
+fdc.Conf()
+</pre>
+</div>
+
+<pre class="example">
+&lt;record Conf, fields: {nIntsPerVector, starting_int, ending_int, queue_timeout_ms}&gt;
+</pre>
+
+<p>
+For both modules, the <code>Conf</code> type may be used to create the module-level
+configuration object and both are similarly structured.  Here is the
+producer:
+</p>
+
+<pre class="example">
+In [24]: fdp.Conf?
+Init signature:
+fdp.Conf(
+    *args,
+    nIntsPerVector: dunedaq.appfwk.fdp.Size = 10,
+    starting_int: dunedaq.appfwk.fdp.Count = -4,
+    ending_int: dunedaq.appfwk.fdp.Count = 14,
+    queue_timeout_ms: dunedaq.appfwk.fdp.Count = 100,
+    wait_between_sends_ms: dunedaq.appfwk.fdp.Count = 1000,
+)
+Docstring:     
+Record type Conf with fields: "nIntsPerVector", "starting_int", "ending_int", "queue_timeout_ms", "wait_between_sends_ms"
+
+Fake Data Producer DAQ Module Configuration
+</pre>
+
+<p>
+Both happen to provide defaults so that their default construction
+results in a fully specified <i>record</i> type instance.  We can thus fill
+in the skeleton simply:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #fcaf3e;">ac</span> = cmd.Command(<span style="color: #e090d7;">id</span>=<span style="color: #e9b96e;">"conf"</span>, data=cmd.AddressedCmds([
+  cmd.AddressedCmd(match=<span style="color: #e9b96e;">"source"</span>, data=fdp.Conf()),
+  cmd.AddressedCmd(match=<span style="color: #e9b96e;">"sink"</span>, data=fdc.Conf())]))
+ac.pod()
+</pre>
+</div>
+
+<pre class="example">
+{'id': 'conf',
+'data': [{'match': 'source',
+'data': {'nIntsPerVector': 10,
+'starting_int': -4,
+'ending_int': 14,
+'queue_timeout_ms': 100,
+'wait_between_sends_ms': 1000}},
+{'match': 'sink',
+'data': {'nIntsPerVector': 10,
+'starting_int': -4,
+'ending_int': 14,
+'queue_timeout_ms': 100}}]}
+</pre>
+
+<p>
+Like with <code>init</code> we may provide a little helper:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ipython"><span style="color: #fcaf3e;">myconf</span> = ddcmd.conf([
+  cmd.AddressedCmd(match=<span style="color: #e9b96e;">"source"</span>, data=fdp.Conf()),
+  cmd.AddressedCmd(match=<span style="color: #e9b96e;">"sink"</span>, data=fdc.Conf())])
+myconf
+</pre>
+</div>
+
+<pre class="example">
+&lt;record Command, fields: {id, data}&gt;
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org89478e4" class="outline-2">
+<h2 id="org89478e4">Command delivery</h2>
+<div class="outline-text-2" id="text-org89478e4">
+<p>
+Various means for delivery of commands to <code>appfwk</code> applications are in
+development.  An initial approach is to use the same interactive REPL
+that we used to build the command objects.  This is described in
+<a href="ddrepl.html">ddrepl.html</a>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org6b4e26a" class="outline-2">
+<h2 id="org6b4e26a">Internals</h2>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Brett Viren</p>
+<p class="date">Created: 2020-10-22 Thu 11:01</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
