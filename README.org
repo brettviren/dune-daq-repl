@@ -1,6 +1,7 @@
 #+title: DUNE DAQ REPL
+#+EXPORT_FILE_NAME: index.html
 
 This repo holds some ideas for handling ~appfwk~ commands
 
-- [[file:ddcmd.org]] describes how to create commands
-- [[file:ddrepl.org]] describes ideas on how to dispatch commands to ~appfwk~ apps
+- [[file:ddcmd.org]] describes how to create commands ([[https://brettviren.github.io/dune-daq-repl/ddcmd.html][online]])
+- [[file:ddrepl.org]] describes ideas on how to dispatch commands to ~appfwk~ apps  ([[https://brettviren.github.io/dune-daq-repl/ddrepl.html][online]])
