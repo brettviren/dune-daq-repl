@@ -8,20 +8,105 @@
 
 * Introduction
 
-This holds an approach to feeding commands to ~appfwk~ applications via
-a read-eval-print loop provided by popular Python applications.
-Support for this is in the [[file:ddrepl.py][ddrepl]] Python module.  See also [[file:ddcmd.org][how to create commands]].
+This document describes some approaches to interactively feeding
+commands to ~appfwk~ applications via various types of read-eval-print
+loop (REPL) and with different types of command transport.  See also
+[[file:ddcmd.org][how to create commands]].
 
-* Talking to ~appfwk~ via the file command facility
+* REPL with the File Command Facility 
 
-So far, ~ddrepl~ has simple support for running a ~daq_application~ as a
-Python subprocess and sending commands to it via the
-~FileCommandFacility~ (provided by ~cmdlib~).
 
-Here is an example as a Python script but it should be obvious how to
-use ~ipython~ or ~ptipython~ to use this same code in an interactive REPL.
-The value ~0.1~ given to the ~da.output()~ is in seconds and represents
-how long to wait for receiving any stdout back from ~daq_application~.
+The ~appfwk~ has a "command facility called the File Command Facility (FCF)
+(actually provided by ~cmdlib~).  It is what is used when the
+application is called like:
+
+#+begin_example
+  $ daq_application --commandFacility file:///path/to/commands.json
+  ## or
+  $ daq_application --commandFacility file:commands.json
+  ## or just
+  $ daq_application --commandFacility commands.json
+#+end_example
+
+You may also give the file format explicitly instead of relying on the
+file extension, eg:
+
+#+begin_example
+  $ daq_application --commandFacility commands.json?fmt=jstream
+#+end_example
+
+When given a file of commands, the FCF will normally "play" those
+commands as fast as possible (though has a batch time delay feature).
+To provide some interactive pacing of commands we may use a REPL.
+
+** Shell REPL
+
+The simplest REPL is no REPL.  Or, rather using simply your Unix shell
+and some basic Unix tools like ~cat~.  To use this type of REPL we first
+create a "named pipe" aka a FIFO file.  The ~dap_application~ will read
+from this pipe and we will write to this pipe from our shell.  Making
+a FIFO file is simple:
+
+#+begin_example
+  $ mkfifo foo.fifo
+#+end_example
+
+Next, start the DAQ app and tell it to read from the FIFO file.  Like
+before you can tell it what format to assume with a URL query
+parameter ~fmt~.  For REPL we should use a JSON Stream:
+
+#+begin_example
+  $ daq_application --commandFacility 'foo.fifo?fmt=jstream'
+#+end_example
+
+#+begin_note
+One could just as well do ~mkfifo foo.jstream~ and use that.  The
+example here shows how format may be set independently from file name
+extension.
+#+end_note
+
+Now, prepare some commands.  Let's assume we have one command object
+per JSON file.  Then, in another shell play one or more of them:
+
+#+begin_example
+  $ cat cmd1.json > foo.fifo
+  $ cat cmd2.json > foo.fifo
+#+end_example
+
+If you have a JSON Array file you can also let ~jq~ select individual
+command elements of a command sequence:
+
+#+begin_example
+  $ cat fdpc-job.json |jq '.[0]' > foo.fifo
+  $ cat fdpc-job.json |jq '.[1]' > foo.fifo
+#+end_example
+
+When done, you may wish to manually clean up the FIFO file:
+
+#+begin_example
+  $ rm foo.fifo
+#+end_example
+
+** Python REPL
+
+A second approach to using a REPL with the File Command Facility is
+implemented in Python by the [[file:ddrepl.py][ddrepl]] Python module.  This approach
+integrates well with making your command objects in Python as
+described in [[file:ddcmd.org][DUNE DAQ Command Object Creation]] document.
+
+Under the hood, this method works much the same way as the shell REPL
+above.  Python tooling is provided to:
+
+- make the FIFO file
+- start the ~daq_application~ as a Python subprocess
+- provide an interface to send individual commands through the FIFO
+- cleanup FIFO file
+
+Here is an example as of Python you may put in a script or
+interactively type in a Python REPL such as ~ipython~ or ~ptipython~.  The
+value ~0.1~ given to the ~da.output()~ is in seconds and represents how
+long to wait (block) while receiving any stdout back from
+~daq_application~.
 
 #+begin_src python :exports both :results output code :wrap example
 import json
@@ -36,64 +121,31 @@ del(da)
 
 #+RESULTS:
 #+begin_example
-2020-Oct-13 13:46:57,126 INFO [fileCommandFacility::fileCommandFacility(...) at /home/bv/dev/dune-daq/sv/appfwk/src/FileCommandFacility.cpp:194] open: scheme:file ext:jstream
-2020-Oct-13 13:46:57,127 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:init
-2020-Oct-13 13:46:57,128 INFO [dunedaq::appfwk::DAQModuleManager::init_queues(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:73] Adding queue: hose
-2020-Oct-13 13:46:57,128 INFO [dunedaq::appfwk::DAQModuleManager::init_modules(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:36] construct: FakeDataProducerDAQModule : fdp
-2020-Oct-13 13:46:57,153 INFO [dunedaq::appfwk::FakeDataProducerDAQModule::init(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataProducerDAQModule.cpp:48] FDP: output queue is hose
-2020-Oct-13 13:46:57,153 INFO [dunedaq::appfwk::DAQModuleManager::init_modules(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:36] construct: FakeDataConsumerDAQModule : fdc
-2020-Oct-13 13:46:57,154 INFO [dunedaq::appfwk::FakeDataConsumerDAQModule::init(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataConsumerDAQModule.cpp:47] FDP: input queue is hose
-2020-Oct-13 13:46:57,154 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/appfwk/src/FileCommandFacility.cpp:230] DAQModuleManager execution complete
+2020-Oct-26 17:05:00,508 INFO [fileCommandFacility::fileCommandFacility(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:253] open: file:///tmp/tmpk1j9uf1c/commands.jstream as jstream
+2020-Oct-26 17:05:00,509 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:286] DAQModuleManager execution complete
+2020-Oct-26 17:05:00,519 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:init
+2020-Oct-26 17:05:00,519 INFO [dunedaq::appfwk::DAQModuleManager::init_queues(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:73] Adding queue: hose
+2020-Oct-26 17:05:00,519 INFO [dunedaq::appfwk::DAQModuleManager::init_modules(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:36] construct: FakeDataProducerDAQModule : fdp
 
-2020-Oct-13 13:46:57,255 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:conf
-2020-Oct-13 13:46:57,255 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "conf" to "fdp":
-{
-    "ending_int": 14,
-    "nIntsPerVector": 10,
-    "queue_timeout_ms": 100,
-    "starting_int": -4,
-    "wait_between_sends_ms": 1000
-}
-{
-    "ending_int": 14,
-    "nIntsPerVector": 10,
-    "queue_timeout_ms": 100,
-    "starting_int": -4,
-    "wait_between_sends_ms": 1000
-}
-2020-Oct-13 13:46:57,255 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "conf" to "fdc":
-{
-    "ending_int": 14,
-    "nIntsPerVector": 10,
-    "queue_timeout_ms": 100,
-    "starting_int": -4
-}
-2020-Oct-13 13:46:57,255 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/appfwk/src/FileCommandFacility.cpp:230] DAQModuleManager execution complete
+2020-Oct-26 17:05:00,620 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:286] DAQModuleManager execution complete
+2020-Oct-26 17:05:00,624 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:conf
 
-2020-Oct-13 13:46:57,355 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:start
-2020-Oct-13 13:46:57,355 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "start" to "fdc":
-{
-    "run": 42
-}
-2020-Oct-13 13:46:57,355 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "start" to "fdp":
-{
-    "run": 42
-}
-2020-Oct-13 13:46:57,356 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/appfwk/src/FileCommandFacility.cpp:230] DAQModuleManager execution complete
-2020-Oct-13 13:46:57,356 INFO [dunedaq::appfwk::FakeDataConsumerDAQModule::do_work(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataConsumerDAQModule.cpp:96] FDC: do_work
-2020-Oct-13 13:46:57,356 INFO [dunedaq::appfwk::FakeDataProducerDAQModule::do_work(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataProducerDAQModule.cpp:101] FDP: do_work
-2020-Oct-13 13:46:57,356 DEBUG_0 [dunedaq::appfwk::FakeDataProducerDAQModule::do_work(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataProducerDAQModule.cpp:118] Produced vector 0 with contents {-4, -3, -2, -1, 0, 1, 2, 3, 4, 5} and size 10 DAQModule: fdp
+2020-Oct-26 17:05:00,724 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:286] DAQModuleManager execution complete
+2020-Oct-26 17:05:00,725 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:start
 
-2020-Oct-13 13:46:57,356 INFO [dunedaq::appfwk::FakeDataProducerDAQModule::do_work(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataProducerDAQModule.cpp:122] FDP "fdp" push 0
-2020-Oct-13 13:46:57,456 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:stop
-2020-Oct-13 13:46:57,456 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "stop" to "fdp":
+2020-Oct-26 17:05:00,825 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:286] DAQModuleManager execution complete
+2020-Oct-26 17:05:00,826 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:stop
 
 #+end_example
 
-* Talking to ~appfwk~ via the REST server
+* REPL with the REST Command Facility
 
-The above approach uses a Unix domain socket (filesystem FIFO file) to
-send commands to ~appfwk~ apps.  This same approach can be extended to
-make use of the new REST support.  The REPL becomes an HTTP client to
-the HTTP server running in the ~appfwk~ app.
-Details t.b.d.
+The above approach requires the DAQ application and the source of
+commands to reside on the same host.  Ie, both ends must access the
+FIFO file.  
+
+Another approach exploits a different command facility which provides
+an HTTP client enacting a RESTful API (RCF).
+
+Details t.b.d. (Roland?)
+

@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-10-22 Thu 10:56 -->
+<!-- 2020-10-26 Mon 17:25 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>DUNE DAQ REPL</title>
@@ -256,38 +256,155 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org5569286">Introduction</a></li>
-<li><a href="#org823315a">Talking to <code>appfwk</code> via the file command facility</a></li>
-<li><a href="#orga65275d">Talking to <code>appfwk</code> via the REST server</a></li>
+<li><a href="#org7892ddb">Introduction</a></li>
+<li><a href="#org8067343">REPL with the File Command Facility</a>
+<ul>
+<li><a href="#orge5ad983">Shell REPL</a></li>
+<li><a href="#org5f8c3db">Python REPL</a></li>
+</ul>
+</li>
+<li><a href="#org7bcf7d0">REPL with the REST Command Facility</a></li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org5569286" class="outline-2">
-<h2 id="org5569286">Introduction</h2>
-<div class="outline-text-2" id="text-org5569286">
+<div id="outline-container-org7892ddb" class="outline-2">
+<h2 id="org7892ddb">Introduction</h2>
+<div class="outline-text-2" id="text-org7892ddb">
 <p>
-This holds an approach to feeding commands to <code>appfwk</code> applications via
-a read-eval-print loop provided by popular Python applications.
-Support for this is in the <a href="ddrepl.py">ddrepl</a> Python module.  See also <a href="ddcmd.html">how to create commands</a>.
+This document describes some approaches to interactively feeding
+commands to <code>appfwk</code> applications via various types of read-eval-print
+loop (REPL) and with different types of command transport.  See also
+<a href="ddcmd.html">how to create commands</a>.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org823315a" class="outline-2">
-<h2 id="org823315a">Talking to <code>appfwk</code> via the file command facility</h2>
-<div class="outline-text-2" id="text-org823315a">
+<div id="outline-container-org8067343" class="outline-2">
+<h2 id="org8067343">REPL with the File Command Facility</h2>
+<div class="outline-text-2" id="text-org8067343">
 <p>
-So far, <code>ddrepl</code> has simple support for running a <code>daq_application</code> as a
-Python subprocess and sending commands to it via the
-<code>FileCommandFacility</code> (provided by <code>cmdlib</code>).
+The <code>appfwk</code> has a "command facility called the File Command Facility (FCF)
+(actually provided by <code>cmdlib</code>).  It is what is used when the
+application is called like:
+</p>
+
+<pre class="example">
+$ daq_application --commandFacility file:///path/to/commands.json
+## or
+$ daq_application --commandFacility file:commands.json
+## or just
+$ daq_application --commandFacility commands.json
+</pre>
+
+<p>
+You may also give the file format explicitly instead of relying on the
+file extension, eg:
+</p>
+
+<pre class="example">
+$ daq_application --commandFacility commands.json?fmt=jstream
+</pre>
+
+<p>
+When given a file of commands, the FCF will normally "play" those
+commands as fast as possible (though has a batch time delay feature).
+To provide some interactive pacing of commands we may use a REPL.
+</p>
+</div>
+
+<div id="outline-container-orge5ad983" class="outline-3">
+<h3 id="orge5ad983">Shell REPL</h3>
+<div class="outline-text-3" id="text-orge5ad983">
+<p>
+The simplest REPL is no REPL.  Or, rather using simply your Unix shell
+and some basic Unix tools like <code>cat</code>.  To use this type of REPL we first
+create a "named pipe" aka a FIFO file.  The <code>dap_application</code> will read
+from this pipe and we will write to this pipe from our shell.  Making
+a FIFO file is simple:
+</p>
+
+<pre class="example">
+$ mkfifo foo.fifo
+</pre>
+
+<p>
+Next, start the DAQ app and tell it to read from the FIFO file.  Like
+before you can tell it what format to assume with a URL query
+parameter <code>fmt</code>.  For REPL we should use a JSON Stream:
+</p>
+
+<pre class="example">
+$ daq_application --commandFacility 'foo.fifo?fmt=jstream'
+</pre>
+
+<div class="note">
+<p>
+One could just as well do <code>mkfifo foo.jstream</code> and use that.  The
+example here shows how format may be set independently from file name
+extension.
+</p>
+
+</div>
+
+<p>
+Now, prepare some commands.  Let's assume we have one command object
+per JSON file.  Then, in another shell play one or more of them:
+</p>
+
+<pre class="example">
+$ cat cmd1.json &gt; foo.fifo
+$ cat cmd2.json &gt; foo.fifo
+</pre>
+
+<p>
+If you have a JSON Array file you can also let <code>jq</code> select individual
+command elements of a command sequence:
+</p>
+
+<pre class="example">
+$ cat fdpc-job.json |jq '.[0]' &gt; foo.fifo
+$ cat fdpc-job.json |jq '.[1]' &gt; foo.fifo
+</pre>
+
+<p>
+When done, you may wish to manually clean up the FIFO file:
+</p>
+
+<pre class="example">
+$ rm foo.fifo
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org5f8c3db" class="outline-3">
+<h3 id="org5f8c3db">Python REPL</h3>
+<div class="outline-text-3" id="text-org5f8c3db">
+<p>
+A second approach to using a REPL with the File Command Facility is
+implemented in Python by the <a href="ddrepl.py">ddrepl</a> Python module.  This approach
+integrates well with making your command objects in Python as
+described in <a href="ddcmd.html">DUNE DAQ Command Object Creation</a> document.
 </p>
 
 <p>
-Here is an example as a Python script but it should be obvious how to
-use <code>ipython</code> or <code>ptipython</code> to use this same code in an interactive REPL.
-The value <code>0.1</code> given to the <code>da.output()</code> is in seconds and represents
-how long to wait for receiving any stdout back from <code>daq_application</code>.
+Under the hood, this method works much the same way as the shell REPL
+above.  Python tooling is provided to:
+</p>
+
+<ul class="org-ul">
+<li>make the FIFO file</li>
+<li>start the <code>daq_application</code> as a Python subprocess</li>
+<li>provide an interface to send individual commands through the FIFO</li>
+<li>cleanup FIFO file</li>
+</ul>
+
+<p>
+Here is an example as of Python you may put in a script or
+interactively type in a Python REPL such as <code>ipython</code> or <code>ptipython</code>.  The
+value <code>0.1</code> given to the <code>da.output()</code> is in seconds and represents how
+long to wait (block) while receiving any stdout back from
+<code>daq_application</code>.
 </p>
 
 <div class="org-src-container">
@@ -303,78 +420,49 @@ how long to wait for receiving any stdout back from <code>daq_application</code>
 </div>
 
 <pre class="example">
-2020-Oct-22 10:56:15,738 INFO [fileCommandFacility::fileCommandFacility(...) at /home/bv/dev/dune-daq/sv/appfwk/src/FileCommandFacility.cpp:194] open: scheme:file ext:jstream
-2020-Oct-22 10:56:15,739 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:init
-2020-Oct-22 10:56:15,739 INFO [dunedaq::appfwk::DAQModuleManager::init_queues(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:73] Adding queue: hose
-2020-Oct-22 10:56:15,739 INFO [dunedaq::appfwk::DAQModuleManager::init_modules(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:36] construct: FakeDataProducerDAQModule : fdp
-2020-Oct-22 10:56:15,763 INFO [dunedaq::appfwk::FakeDataProducerDAQModule::init(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataProducerDAQModule.cpp:48] FDP: output queue is hose
-2020-Oct-22 10:56:15,763 INFO [dunedaq::appfwk::DAQModuleManager::init_modules(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:36] construct: FakeDataConsumerDAQModule : fdc
-2020-Oct-22 10:56:15,763 INFO [dunedaq::appfwk::FakeDataConsumerDAQModule::init(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataConsumerDAQModule.cpp:47] FDP: input queue is hose
-2020-Oct-22 10:56:15,764 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/appfwk/src/FileCommandFacility.cpp:230] DAQModuleManager execution complete
+2020-Oct-26 17:25:19,602 INFO [fileCommandFacility::fileCommandFacility(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:253] open: file:///tmp/tmp6ow3qx90/commands.jstream as jstream
+2020-Oct-26 17:25:19,604 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:286] DAQModuleManager execution complete
+2020-Oct-26 17:25:19,613 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:init
+2020-Oct-26 17:25:19,614 INFO [dunedaq::appfwk::DAQModuleManager::init_queues(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:73] Adding queue: hose
+2020-Oct-26 17:25:19,614 INFO [dunedaq::appfwk::DAQModuleManager::init_modules(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:36] construct: FakeDataProducerDAQModule : fdp
 
-2020-Oct-22 10:56:15,864 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:conf
-2020-Oct-22 10:56:15,864 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "conf" to "fdp":
-{
-    "ending_int": 14,
-    "nIntsPerVector": 10,
-    "queue_timeout_ms": 100,
-    "starting_int": -4,
-    "wait_between_sends_ms": 1000
-}
-{
-    "ending_int": 14,
-    "nIntsPerVector": 10,
-    "queue_timeout_ms": 100,
-    "starting_int": -4,
-    "wait_between_sends_ms": 1000
-}
-2020-Oct-22 10:56:15,864 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "conf" to "fdc":
-{
-    "ending_int": 14,
-    "nIntsPerVector": 10,
-    "queue_timeout_ms": 100,
-    "starting_int": -4
-}
-2020-Oct-22 10:56:15,864 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/appfwk/src/FileCommandFacility.cpp:230] DAQModuleManager execution complete
+2020-Oct-26 17:25:19,714 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:286] DAQModuleManager execution complete
+2020-Oct-26 17:25:19,718 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:conf
 
-2020-Oct-22 10:56:15,965 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:start
-2020-Oct-22 10:56:15,965 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "start" to "fdc":
-{
-    "run": 42
-}
-2020-Oct-22 10:56:15,965 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "start" to "fdp":
-{
-    "run": 42
-}
-2020-Oct-22 10:56:15,965 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/appfwk/src/FileCommandFacility.cpp:230] DAQModuleManager execution complete
-2020-Oct-22 10:56:15,965 INFO [dunedaq::appfwk::FakeDataConsumerDAQModule::do_work(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataConsumerDAQModule.cpp:96] FDC: do_work
-2020-Oct-22 10:56:15,965 INFO [dunedaq::appfwk::FakeDataProducerDAQModule::do_work(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataProducerDAQModule.cpp:101] FDP: do_work
-2020-Oct-22 10:56:15,965 DEBUG_0 [dunedaq::appfwk::FakeDataProducerDAQModule::do_work(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataProducerDAQModule.cpp:118] Produced vector 0 with contents {-4, -3, -2, -1, 0, 1, 2, 3, 4, 5} and size 10 DAQModule: fdp
+2020-Oct-26 17:25:19,818 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:286] DAQModuleManager execution complete
+2020-Oct-26 17:25:19,819 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:start
 
-2020-Oct-22 10:56:15,965 INFO [dunedaq::appfwk::FakeDataProducerDAQModule::do_work(...) at /home/bv/dev/dune-daq/sv/appfwk/test/FakeDataProducerDAQModule.cpp:122] FDP "fdp" push 0
-2020-Oct-22 10:56:16,066 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:stop
-2020-Oct-22 10:56:16,066 INFO [dunedaq::appfwk::DAQModuleManager::dispatch(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:86] dispatch "stop" to "fdp":
+2020-Oct-26 17:25:19,919 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:286] DAQModuleManager execution complete
+2020-Oct-26 17:25:19,920 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:stop
 
 </pre>
 </div>
 </div>
+</div>
 
-<div id="outline-container-orga65275d" class="outline-2">
-<h2 id="orga65275d">Talking to <code>appfwk</code> via the REST server</h2>
-<div class="outline-text-2" id="text-orga65275d">
+<div id="outline-container-org7bcf7d0" class="outline-2">
+<h2 id="org7bcf7d0">REPL with the REST Command Facility</h2>
+<div class="outline-text-2" id="text-org7bcf7d0">
 <p>
-The above approach uses a Unix domain socket (filesystem FIFO file) to
-send commands to <code>appfwk</code> apps.  This same approach can be extended to
-make use of the new REST support.  The REPL becomes an HTTP client to
-the HTTP server running in the <code>appfwk</code> app.
-Details t.b.d.
+The above approach requires the DAQ application and the source of
+commands to reside on the same host.  Ie, both ends must access the
+FIFO file.  
+</p>
+
+<p>
+Another approach exploits a different command facility which provides
+an HTTP client enacting a RESTful API (RCF).
+</p>
+
+<p>
+Details t.b.d. (Roland?)
 </p>
 </div>
 </div>
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Brett Viren</p>
-<p class="date">Created: 2020-10-22 Thu 10:56</p>
+<p class="date">Created: 2020-10-26 Mon 17:25</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
