@@ -22,9 +22,32 @@ or
 '''
 import os
 import json
+
 from select import select
 import tempfile
 import subprocess
+import requests
+
+
+class DaqRestClient:
+    '''
+    Access app REST API
+    '''
+    def __init__(self, url="http://localhost:12345/command",
+                 answer_port=12333):
+        self.url = url
+        self._headers = {'content-type': 'application/json',
+                         'x-answer-port': str(answer_port)}
+
+    def __call__(self, cmd):
+        '''
+        Send a command return response.
+        '''
+
+        response = requests.post(self.url, data=json.dumps(cmd),
+                                 headers=self._headers)
+        #print(response.content.decode())
+        return response
 
 
 class DaqApp:
@@ -35,13 +58,22 @@ class DaqApp:
         tmpdir = tempfile.mkdtemp()
         self.fname = os.path.join(tmpdir, "commands.jstream")
         os.mkfifo(self.fname)
+        print("using fifo: %s" % self.fname)
         self.proc = subprocess.Popen(["daq_application",
                                       "--commandFacility",
                                       "file://" + self.fname],
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT,
                                      text=True, bufsize=1)
+        # try:
+        #     outs, errs = self.proc.communicate(timeout=1)
+        #     print("normal start: stdout:\n%s\nstderr:\n%s" % (outs, errs))
+        # except subprocess.TimeoutExpired:
+        #     outs, errs = self.proc.communicate()
+        #     print("timeout: stdout:\n%s\nstderr:\n%s" % (outs, errs))
+
         self.out = open(self.fname, "wb")
+        print("ready to send")
 
     def __del__(self):
         self.terminate()

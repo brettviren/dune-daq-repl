@@ -15,7 +15,6 @@ loop (REPL) and with different types of command transport.  See also
 
 * REPL with the File Command Facility 
 
-
 The ~appfwk~ has a "command facility called the File Command Facility (FCF)
 (actually provided by ~cmdlib~).  It is what is used when the
 application is called like:
@@ -24,15 +23,18 @@ application is called like:
   $ daq_application --commandFacility file:///path/to/commands.json
   ## or
   $ daq_application --commandFacility file:commands.json
-  ## or just
-  $ daq_application --commandFacility commands.json
 #+end_example
+
+#+begin_note
+You may actually omit the ~file:~ scheme for relative files or the
+~file://~ for absolute paths.
+#+end_note
 
 You may also give the file format explicitly instead of relying on the
 file extension, eg:
 
 #+begin_example
-  $ daq_application --commandFacility commands.json?fmt=jstream
+  $ daq_application --commandFacility file:commands.json?fmt=jstream
 #+end_example
 
 When given a file of commands, the FCF will normally "play" those
@@ -56,7 +58,7 @@ before you can tell it what format to assume with a URL query
 parameter ~fmt~.  For REPL we should use a JSON Stream:
 
 #+begin_example
-  $ daq_application --commandFacility 'foo.fifo?fmt=jstream'
+  $ daq_application --commandFacility 'file:foo.fifo?fmt=jstream'
 #+end_example
 
 #+begin_note
@@ -121,22 +123,9 @@ del(da)
 
 #+RESULTS:
 #+begin_example
-2020-Oct-26 17:05:00,508 INFO [fileCommandFacility::fileCommandFacility(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:253] open: file:///tmp/tmpk1j9uf1c/commands.jstream as jstream
-2020-Oct-26 17:05:00,509 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:286] DAQModuleManager execution complete
-2020-Oct-26 17:05:00,519 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:init
-2020-Oct-26 17:05:00,519 INFO [dunedaq::appfwk::DAQModuleManager::init_queues(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:73] Adding queue: hose
-2020-Oct-26 17:05:00,519 INFO [dunedaq::appfwk::DAQModuleManager::init_modules(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:36] construct: FakeDataProducerDAQModule : fdp
-
-2020-Oct-26 17:05:00,620 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:286] DAQModuleManager execution complete
-2020-Oct-26 17:05:00,624 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:conf
-
-2020-Oct-26 17:05:00,724 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:286] DAQModuleManager execution complete
-2020-Oct-26 17:05:00,725 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:start
-
-2020-Oct-26 17:05:00,825 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/cmdlib/plugins/fileCommandFacility.cpp:286] DAQModuleManager execution complete
-2020-Oct-26 17:05:00,826 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:stop
-
 #+end_example
+
+
 
 * REPL with the REST Command Facility
 
@@ -144,8 +133,51 @@ The above approach requires the DAQ application and the source of
 commands to reside on the same host.  Ie, both ends must access the
 FIFO file.  
 
-Another approach exploits a different command facility which provides
-an HTTP client enacting a RESTful API (RCF).
+Another approach exploits the REST command facility (RCF) which
+provides an HTTP server running in the DAQ application.  The ~ddrepl~
+provides a simple client to send the server commands.  It requires the
+~daq_application~ to have already been started like:
 
-Details t.b.d. (Roland?)
+#+begin_example
+$ daq_application --commandFacility rest://localhost:12345
+#+end_example
 
+The ~ddrepl~ Python interface is then almost identical to the local
+file-based one.  After starting as above, one may run:
+
+#+begin_src python :exports both :results output code :wrap example
+import json
+import ddrepl
+cmds = json.load(open("fdpc-job.json"))
+da = ddrepl.DaqRestClient()
+for cmd in cmds:
+    res = da(cmd)
+    print(res.content.decode())
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Command received
+
+Command received
+
+Command received
+
+Command received
+
+#+end_example
+
+You may see the usual logging show up in the terminal running
+~daq_application~.
+
+The ~ddrepl.DaqRestClient()~ takes two options:
+
+#+begin_example
+In [2]: ddrepl.DaqRestClient?
+Init signature:
+ddrepl.DaqRestClient(
+    url='http://localhost:12345/command',
+    answer_port=12333,
+)
+Docstring:      Access app REST API
+#+end_example
