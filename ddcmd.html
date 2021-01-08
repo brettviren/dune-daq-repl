@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2021-01-08 Fri 16:44 -->
+<!-- 2021-01-08 Fri 16:50 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>DUNE DAQ Command Object Creation</title>
@@ -259,37 +259,37 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org0ac051e">Introduction</a></li>
-<li><a href="#org434f6e3">Setup</a></li>
-<li><a href="#org04857fa">Quick Start</a></li>
-<li><a href="#org8dfbc97">Loading types</a></li>
-<li><a href="#org68a6787">Interrogating types</a></li>
-<li><a href="#orga9c73cb">Examples</a>
+<li><a href="#org47a56c3">Introduction</a></li>
+<li><a href="#org6c27ba8">Setup</a></li>
+<li><a href="#orgf93c208">Quick Start</a></li>
+<li><a href="#org623bc40">Loading types</a></li>
+<li><a href="#org1d861d8">Interrogating types</a></li>
+<li><a href="#org113e009">Examples</a>
 <ul>
-<li><a href="#org8eb19be">Boolean</a></li>
-<li><a href="#org1cf8e01">Numbers</a></li>
-<li><a href="#org10da8d4">Strings</a></li>
-<li><a href="#org8ac9946">Enums</a></li>
-<li><a href="#orgc375651">Records</a></li>
-<li><a href="#orged95e15">Sequences</a></li>
-<li><a href="#orgda37b87">Anys</a></li>
+<li><a href="#orgb09464f">Boolean</a></li>
+<li><a href="#orga26d941">Numbers</a></li>
+<li><a href="#org4e27dec">Strings</a></li>
+<li><a href="#org0f0bc95">Enums</a></li>
+<li><a href="#orga995aed">Records</a></li>
+<li><a href="#org7d9f328">Sequences</a></li>
+<li><a href="#orgf2e0a50">Anys</a></li>
 </ul>
 </li>
-<li><a href="#org1bc5851">Construct Commands</a>
+<li><a href="#orgaee67e4">Construct Commands</a>
 <ul>
-<li><a href="#org16ef7e7">The <code>init</code> command</a></li>
-<li><a href="#org53c3b94">Putting <code>init</code> together</a></li>
-<li><a href="#org1638b9b">The <code>conf</code> command</a></li>
+<li><a href="#org725a1ce">The <code>init</code> command</a></li>
+<li><a href="#orgea14343">Putting <code>init</code> together</a></li>
+<li><a href="#orgc5ad165">The <code>conf</code> command</a></li>
 </ul>
 </li>
-<li><a href="#orga45dda1">Command delivery</a></li>
+<li><a href="#orgd8516de">Command delivery</a></li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org0ac051e" class="outline-2">
-<h2 id="org0ac051e">Introduction</h2>
-<div class="outline-text-2" id="text-org0ac051e">
+<div id="outline-container-org47a56c3" class="outline-2">
+<h2 id="org47a56c3">Introduction</h2>
+<div class="outline-text-2" id="text-org47a56c3">
 <p>
 DUNE DAQ command objects must rigorously follow a defined schema.
 From this schema, C++, Python and other artifacts are generated using
@@ -345,9 +345,9 @@ which holds the POD string <code>"bv@bnl.gov"</code>.
 </div>
 </div>
 
-<div id="outline-container-org434f6e3" class="outline-2">
-<h2 id="org434f6e3">Setup</h2>
-<div class="outline-text-2" id="text-org434f6e3">
+<div id="outline-container-org6c27ba8" class="outline-2">
+<h2 id="org6c27ba8">Setup</h2>
+<div class="outline-text-2" id="text-org6c27ba8">
 <p>
 We need to install <code>moo</code> and some nice REPL (here, we recommend <code>ptipython</code>)
 </p>
@@ -367,7 +367,7 @@ Let's also clone this repository and that of <code>appfwk</code>.
 <p>
 We clone <code>appfwk</code> here in order to access its <code>schema/</code> directory.  If you
 have <code>appfwk</code> installed as a package you may already have access to this
-directory and can then skip the explicit cloning.  Set <code>MOO_MODULE_PATH</code> if needed. 
+directory and can then skip the explicit cloning.  Set <code>MOO_MODEL_PATH</code> if needed. 
 </p>
 
 </div>
@@ -410,9 +410,9 @@ This document is made in Emacs orgmode using <code>ob-ipython</code>.  It may be
 </div>
 </div>
 
-<div id="outline-container-org04857fa" class="outline-2">
-<h2 id="org04857fa">Quick Start</h2>
-<div class="outline-text-2" id="text-org04857fa">
+<div id="outline-container-orgf93c208" class="outline-2">
+<h2 id="orgf93c208">Quick Start</h2>
+<div class="outline-text-2" id="text-orgf93c208">
 <p>
 This section shows how to create one particular sequence of command
 objects while leaving aside any explanation.  The remainder of the
@@ -464,9 +464,9 @@ learn to use the Python types to make your own command objects.
 </div>
 </div>
 
-<div id="outline-container-org8dfbc97" class="outline-2">
-<h2 id="org8dfbc97">Loading types</h2>
-<div class="outline-text-2" id="text-org8dfbc97">
+<div id="outline-container-org623bc40" class="outline-2">
+<h2 id="org623bc40">Loading types</h2>
+<div class="outline-text-2" id="text-org623bc40">
 <p>
 To get Python types with which we may construct objects we first load
 a schema:
@@ -514,9 +514,9 @@ hierarchy.
 </div>
 </div>
 
-<div id="outline-container-org68a6787" class="outline-2">
-<h2 id="org68a6787">Interrogating types</h2>
-<div class="outline-text-2" id="text-org68a6787">
+<div id="outline-container-org1d861d8" class="outline-2">
+<h2 id="org1d861d8">Interrogating types</h2>
+<div class="outline-text-2" id="text-org1d861d8">
 <p>
 As an example, let's look at one of the most trivial types in the
 <code>appfwk</code> schema, a <code>CmdId</code>.
@@ -607,18 +607,18 @@ validation code that does the heavy lifting.
 </div>
 </div>
 
-<div id="outline-container-orga9c73cb" class="outline-2">
-<h2 id="orga9c73cb">Examples</h2>
-<div class="outline-text-2" id="text-orga9c73cb">
+<div id="outline-container-org113e009" class="outline-2">
+<h2 id="org113e009">Examples</h2>
+<div class="outline-text-2" id="text-org113e009">
 <p>
 Here we go through some examples of making instances of types of
 different schema classes.  We saw <i>string</i> above so will skip it.
 </p>
 </div>
 
-<div id="outline-container-org8eb19be" class="outline-3">
-<h3 id="org8eb19be">Boolean</h3>
-<div class="outline-text-3" id="text-org8eb19be">
+<div id="outline-container-orgb09464f" class="outline-3">
+<h3 id="orgb09464f">Boolean</h3>
+<div class="outline-text-3" id="text-orgb09464f">
 <p>
 The simplest schema class is <i>boolean</i>.  The <code>appfwk</code> schema currently
 includes no examples.  We can however, create one from whole cloth by
@@ -658,9 +658,9 @@ With <code>moo</code> <i>boolean</i> types we may set them to various "truthy" a
 </div>
 </div>
 
-<div id="outline-container-org1cf8e01" class="outline-3">
-<h3 id="org1cf8e01">Numbers</h3>
-<div class="outline-text-3" id="text-org1cf8e01">
+<div id="outline-container-orga26d941" class="outline-3">
+<h3 id="orga26d941">Numbers</h3>
+<div class="outline-text-3" id="text-orga26d941">
 <p>
 Every type of <code>appfwk</code> queue has a "capacity" which we will provide from
 instances of the type <code>QueueCapacity</code> which is of the schema class
@@ -684,20 +684,20 @@ representation level and in the generated Python "otypes".
 </div>
 </div>
 
-<div id="outline-container-org10da8d4" class="outline-3">
-<h3 id="org10da8d4">Strings</h3>
-<div class="outline-text-3" id="text-org10da8d4">
+<div id="outline-container-org4e27dec" class="outline-3">
+<h3 id="org4e27dec">Strings</h3>
+<div class="outline-text-3" id="text-org4e27dec">
 <p>
 We saw an example of a <i>string</i> schema class type <code>CmdId</code> above in the
-section <a href="#org68a6787">Interrogating types</a> so we will not repeat that here.
+section <a href="#org1d861d8">Interrogating types</a> so we will not repeat that here.
 </p>
 </div>
 </div>
 
 
-<div id="outline-container-org8ac9946" class="outline-3">
-<h3 id="org8ac9946">Enums</h3>
-<div class="outline-text-3" id="text-org8ac9946">
+<div id="outline-container-org0f0bc95" class="outline-3">
+<h3 id="org0f0bc95">Enums</h3>
+<div class="outline-text-3" id="text-org0f0bc95">
 <p>
 An <i>enum</i> is a string-like type that may take on a value from a predetermined set.  The defining schema may specify a default value from this set or if not given then the first value is taken as default.
 </p>
@@ -740,9 +740,9 @@ ValueError: illegal enum QueueKind value MagicQueue
 </div>
 </div>
 
-<div id="outline-container-orgc375651" class="outline-3">
-<h3 id="orgc375651">Records</h3>
-<div class="outline-text-3" id="text-orgc375651">
+<div id="outline-container-orga995aed" class="outline-3">
+<h3 id="orga995aed">Records</h3>
+<div class="outline-text-3" id="text-orga995aed">
 <p>
 The Python type which corresponds to a <code>moo</code> oschema class <i>record</i> has
 some extra functionality to allow instances to mimic Python data
@@ -862,9 +862,9 @@ which is itself a string needs to be done properly.
 </div>
 </div>
 
-<div id="outline-container-orged95e15" class="outline-3">
-<h3 id="orged95e15">Sequences</h3>
-<div class="outline-text-3" id="text-orged95e15">
+<div id="outline-container-org7d9f328" class="outline-3">
+<h3 id="org7d9f328">Sequences</h3>
+<div class="outline-text-3" id="text-org7d9f328">
 <p>
 A <i>sequence</i> schema class models an ordered array or list of elements
 which are themselves each of the same type.  The <code>appfwk</code> schema has a
@@ -935,9 +935,9 @@ Some changes may still be made to <i>sequence</i> schema class such as setting c
 </div>
 </div>
 
-<div id="outline-container-orgda37b87" class="outline-3">
-<h3 id="orgda37b87">Anys</h3>
-<div class="outline-text-3" id="text-orgda37b87">
+<div id="outline-container-orgf2e0a50" class="outline-3">
+<h3 id="orgf2e0a50">Anys</h3>
+<div class="outline-text-3" id="text-orgf2e0a50">
 <p>
 An <i>any</i> type is a simple form of a dynamic type.  It is <b>kind of</b> like a
 <code>void*</code> in C or a pointer to a polymorphic base class in C++ but there
@@ -1026,9 +1026,9 @@ ValueError: cross any updates not allowed
 </div>
 </div>
 
-<div id="outline-container-org1bc5851" class="outline-2">
-<h2 id="org1bc5851">Construct Commands</h2>
-<div class="outline-text-2" id="text-org1bc5851">
+<div id="outline-container-orgaee67e4" class="outline-2">
+<h2 id="orgaee67e4">Construct Commands</h2>
+<div class="outline-text-2" id="text-orgaee67e4">
 <p>
 The schema corresponding to the <code>appfwk</code> commands with IDs <code>init</code> and <code>conf</code>
 are simple but take some work to construct.  Besides setting values
@@ -1062,9 +1062,9 @@ depends on the value of <code>id</code>.
 </p>
 </div>
 
-<div id="outline-container-org16ef7e7" class="outline-3">
-<h3 id="org16ef7e7">The <code>init</code> command</h3>
-<div class="outline-text-3" id="text-org16ef7e7">
+<div id="outline-container-org725a1ce" class="outline-3">
+<h3 id="org725a1ce">The <code>init</code> command</h3>
+<div class="outline-text-3" id="text-org725a1ce">
 <p>
 The <code>init</code> command provides all the information to take a fully <b>generic</b>
 <code>appfwk</code> application into one that has all of its queues and modules
@@ -1156,9 +1156,9 @@ queue and module sequences with a working example.
 </p>
 </div>
 
-<div id="outline-container-orgd381e01" class="outline-4">
-<h4 id="orgd381e01">Queue initialization</h4>
-<div class="outline-text-4" id="text-orgd381e01">
+<div id="outline-container-orgb156e0b" class="outline-4">
+<h4 id="orgb156e0b">Queue initialization</h4>
+<div class="outline-text-4" id="text-orgb156e0b">
 <p>
 An <code>appfwk</code> queue is initialized with a <code>QueueSpec</code> which we introduced
 already.  The only new thing to know is that a queue <code>inst</code> field
@@ -1184,9 +1184,9 @@ queues.pod()
 </div>
 </div>
 
-<div id="outline-container-orga2c84f3" class="outline-4">
-<h4 id="orga2c84f3">Module initialized</h4>
-<div class="outline-text-4" id="text-orga2c84f3">
+<div id="outline-container-org733a525" class="outline-4">
+<h4 id="org733a525">Module initialized</h4>
+<div class="outline-text-4" id="text-org733a525">
 <p>
 An <code>appfwk</code> module is initialized with a <code>ModSpec</code>, introduced above.
 Here, we give initialization for the two "fake" test modules provided
@@ -1215,9 +1215,9 @@ modules.pod()
 </div>
 </div>
 
-<div id="outline-container-org53c3b94" class="outline-3">
-<h3 id="org53c3b94">Putting <code>init</code> together</h3>
-<div class="outline-text-3" id="text-org53c3b94">
+<div id="outline-container-orgea14343" class="outline-3">
+<h3 id="orgea14343">Putting <code>init</code> together</h3>
+<div class="outline-text-3" id="text-orgea14343">
 <p>
 Let's use the little <code>ddcmd.init()</code> helper again to build a full <code>init</code> command.
 </p>
@@ -1243,9 +1243,9 @@ myinit.pod()
 </div>
 
 
-<div id="outline-container-org1638b9b" class="outline-3">
-<h3 id="org1638b9b">The <code>conf</code> command</h3>
-<div class="outline-text-3" id="text-org1638b9b">
+<div id="outline-container-orgc5ad165" class="outline-3">
+<h3 id="orgc5ad165">The <code>conf</code> command</h3>
+<div class="outline-text-3" id="text-orgc5ad165">
 <p>
 The <code>conf</code> command's <i>any</i> typed <code>.data</code> holds module-level configuration
 (sub) objects in a <code>.modules</code> attribute.  This attribute is of types
@@ -1296,9 +1296,9 @@ We now turn to making the module-specific configuration objects.
 </p>
 </div>
 
-<div id="outline-container-orga7b40b1" class="outline-4">
-<h4 id="orga7b40b1">Module configuration objects</h4>
-<div class="outline-text-4" id="text-orga7b40b1">
+<div id="outline-container-org8125944" class="outline-4">
+<h4 id="org8125944">Module configuration objects</h4>
+<div class="outline-text-4" id="text-org8125944">
 <p>
 Each <code>appfwk</code> module implementation (ie, the C++ subclass of <code>DAQModule</code>)
 defines its own configuration object schema.
@@ -1423,9 +1423,9 @@ myconf
 </div>
 </div>
 
-<div id="outline-container-orga45dda1" class="outline-2">
-<h2 id="orga45dda1">Command delivery</h2>
-<div class="outline-text-2" id="text-orga45dda1">
+<div id="outline-container-orgd8516de" class="outline-2">
+<h2 id="orgd8516de">Command delivery</h2>
+<div class="outline-text-2" id="text-orgd8516de">
 <p>
 Various means for delivery of commands to <code>appfwk</code> applications are in
 development.  An initial approach is to use the same interactive REPL
@@ -1437,7 +1437,7 @@ that we used to build the command objects.  This is described in
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Brett Viren Brett Viren</p>
-<p class="date">Created: 2021-01-08 Fri 16:44</p>
+<p class="date">Created: 2021-01-08 Fri 16:50</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

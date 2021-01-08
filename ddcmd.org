@@ -62,7 +62,7 @@ Let's also clone this repository and that of ~appfwk~.
 #+begin_note
 We clone ~appfwk~ here in order to access its ~schema/~ directory.  If you
 have ~appfwk~ installed as a package you may already have access to this
-directory and can then skip the explicit cloning.  Set ~MOO_MODULE_PATH~ if needed. 
+directory and can then skip the explicit cloning.  Set ~MOO_MODEL_PATH~ if needed. 
 #+end_note
 
 #+begin_example
