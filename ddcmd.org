@@ -1,10 +1,6 @@
 #+title: DUNE DAQ Command Object Creation
 #+author: Brett Viren
-#+SETUPFILE: https://fniessen.github.io/org-html-themes/setup/theme-readtheorg.setup
-#+HTML_HEAD: <style> #content{max-width:1800px;}</style>
-#+HTML_HEAD: <style> p{max-width:800px;}</style>
-#+HTML_HEAD: <style> li{max-width:800px;}</style>
-#+OPTIONS:   H:4 num:nil toc:2
+#+setupfile: other/setup-topic.org
 
 * Introduction
 
@@ -71,7 +67,7 @@ directory and can then skip the explicit cloning.  Set ~MOO_MODULE_PATH~ if need
 
 #+begin_example
 $ git clone https://github.com/dune-daq/appfwk.git
-$ export MOO_MODULE_PATH=$(pwd)/appfwk/schema
+$ export MOO_MODEL_PATH=$(pwd)/appfwk/schema
 $ git clone https://github.com/brettviren/dune-daq-repl.git
 #+end_example
 
@@ -105,11 +101,15 @@ objects while leaving aside any explanation.  The remainder of the
 document will fill in the background information.
 
 #+begin_src ipython :session :exports both :results raw drawer
+import moo
 import ddcmd
 
-for mod in ["cmd", "fdp", "fdc"]:
-    schema = ddcmd.load_oschema(f"appfwk-{mod}-schema.jsonnet")
-    these = ddcmd.make_otypes(schema)
+for mod in ["cmd", "FakeDataProducerDAQModule", "FakeDataConsumerDAQModule"]:
+    moo.otypes.load_types(f"appfwk-{mod}-schema.jsonnet")
+
+from dunedaq.appfwk import cmd
+from dunedaq.appfwk import fakedataproducerdaqmodule as fdp
+from dunedaq.appfwk import fakedataconsumerdaqmodule as fdc
 
 queues = cmd.QueueSpecs([
   cmd.QueueSpec(kind='StdDeQueue', inst="hose", capacity=10)])
@@ -129,7 +129,7 @@ myconf = ddcmd.conf([
 
 #+RESULTS:
 :results:
-# Out[189]:
+# Out[5]:
 : [<record Command, fields: {id, data}>, <record Command, fields: {id, data}>]
 :end:
 
@@ -146,15 +146,14 @@ To get Python types with which we may construct objects we first load
 a schema:
 
 #+begin_src ipython :session :exports both :results raw drawer
-import ddcmd
-schema = ddcmd.load_oschema("appfwk-cmd-schema.jsonnet")
-types = ddcmd.make_otypes(schema)
+import moo
+types = moo.otypes.load_types("appfwk-cmd-schema.jsonnet")
 types
 #+end_src
 
 #+RESULTS:
 :results:
-# Out[3]:
+# Out[7]:
 #+BEGIN_EXAMPLE
   {'dunedaq.appfwk.cmd.Match': dunedaq.appfwk.cmd.Match,
   'dunedaq.appfwk.cmd.Data': dunedaq.appfwk.cmd.Data,
@@ -210,7 +209,7 @@ cid = cmd.CmdId("init")
 
 #+RESULTS:
 :results:
-# Out[17]:
+# Out[8]:
 : (<string CmdId: init>, 'init')
 :end:
 
@@ -278,7 +277,7 @@ dropping down to ~moo~.
 
 #+RESULTS:
 :results:
-# Out[20]:
+# Out[9]:
 : <boolean MyBool: True>
 :end:
 
@@ -343,7 +342,7 @@ cmd.QueueKind()
 
 #+RESULTS:
 :results:
-# Out[77]:
+# Out[10]:
 : <enum QueueKind: 'Unknown' of ['Unknown', 'StdDeQueue', 'FollySPSCQueue', 'FollyMPMCQueue']>
 :end:
 
@@ -398,7 +397,7 @@ qs = cmd.QueueSpec(capacity=10)
 
 #+RESULTS:
 :results:
-# Out[26]:
+# Out[11]:
 : (<record QueueSpec, fields: {kind, inst, capacity}>, 'Unknown', 10)
 :end:
 
@@ -428,7 +427,7 @@ qs.pod()
 
 #+RESULTS:
 :results:
-# Out[29]:
+# Out[12]:
 : {'kind': 'Unknown', 'inst': 'hose', 'capacity': 10}
 :end:
 
@@ -481,7 +480,7 @@ qss = cmd.QueueSpecs([qs])
 
 #+RESULTS:
 :results:
-# Out[55]:
+# Out[13]:
 #+BEGIN_EXAMPLE
   (<sequence QueueSpecs 1:[dunedaq.appfwk.cmd.QueueSpec]>,
   [{'kind': 'Unknown', 'inst': 'hose', 'capacity': 10}])
@@ -497,7 +496,7 @@ qss = cmd.QueueSpecs([])
 
 #+RESULTS:
 :results:
-# Out[58]:
+# Out[14]:
 : (<sequence QueueSpecs 0:[dunedaq.appfwk.cmd.QueueSpec]>, [])
 :end:
 
@@ -510,7 +509,7 @@ qss.update([qs])
 
 #+RESULTS:
 :results:
-# Out[57]:
+# Out[15]:
 #+BEGIN_EXAMPLE
   (<sequence QueueSpecs 1:[dunedaq.appfwk.cmd.QueueSpec]>,
   [{'kind': 'Unknown', 'inst': 'hose', 'capacity': 10}])
@@ -575,7 +574,7 @@ d1.pod()
 
 #+RESULTS:
 :results:
-# Out[24]:
+# Out[16]:
 : 'StdDeQueue'
 :end:
 
@@ -678,7 +677,7 @@ myinit.pod()
 
 #+RESULTS:
 :results:
-# Out[121]:
+# Out[17]:
 : {'id': 'init', 'data': {'queues': [], 'modules': []}}
 :end:
 
@@ -692,7 +691,7 @@ myinit.pod()
 
 #+RESULTS:
 :results:
-# Out[124]:
+# Out[18]:
 : {'id': 'init', 'data': {'queues': [], 'modules': []}}
 :end:
 
@@ -718,7 +717,7 @@ queues.pod()
 
 #+RESULTS:
 :results:
-# Out[129]:
+# Out[19]:
 : [{'kind': 'StdDeQueue', 'inst': 'hose', 'capacity': 10}]
 :end:
 
@@ -739,7 +738,7 @@ modules.pod()
 
 #+RESULTS:
 :results:
-# Out[130]:
+# Out[20]:
 #+BEGIN_EXAMPLE
   [{'plugin': 'FakeDataProducerDAQModule',
   'inst': 'source',
@@ -762,7 +761,7 @@ myinit.pod()
 
 #+RESULTS:
 :results:
-# Out[131]:
+# Out[21]:
 #+BEGIN_EXAMPLE
   {'id': 'init',
   'data': {'queues': [{'kind': 'StdDeQueue', 'inst': 'hose', 'capacity': 10}],
@@ -830,25 +829,21 @@ As we did with the general ~appfwk~ level schema we must load the
 module-level schema so that we may use corresponding Python types:
 
 #+begin_src ipython :session :exports both :results raw drawer
-import ddcmd
+import moo
 types = dict()
-for mod in ["fdp", "fdc"]:
-    schema = ddcmd.load_oschema(f"appfwk-{mod}-schema.jsonnet")
-    these = ddcmd.make_otypes(schema)
+for mod in ["FakeDataConsumerDAQModule", "FakeDataProducerDAQModule"]:
+    moo.otypes.load_types(f"appfwk-{mod}-schema.jsonnet")
     types.update(these)
 types
 #+end_src
 
 #+RESULTS:
 :results:
-# Out[155]:
+# Out[96]:
 #+BEGIN_EXAMPLE
-  {'dunedaq.appfwk.fdp.Size': dunedaq.appfwk.fdp.Size,
-  'dunedaq.appfwk.fdp.Count': dunedaq.appfwk.fdp.Count,
-  'dunedaq.appfwk.fdp.Conf': dunedaq.appfwk.fdp.Conf,
-  'dunedaq.appfwk.fdc.Size': dunedaq.appfwk.fdc.Size,
-  'dunedaq.appfwk.fdc.Count': dunedaq.appfwk.fdc.Count,
-  'dunedaq.appfwk.fdc.Conf': dunedaq.appfwk.fdc.Conf}
+  {'dunedaq.appfwk.fakedataconsumerdaqmodule.Size': dunedaq.appfwk.fakedataconsumerdaqmodule.Size,
+  'dunedaq.appfwk.fakedataconsumerdaqmodule.Count': dunedaq.appfwk.fakedataconsumerdaqmodule.Count,
+  'dunedaq.appfwk.fakedataconsumerdaqmodule.Conf': dunedaq.appfwk.fakedataconsumerdaqmodule.Conf}
 #+END_EXAMPLE
 :end:
 
@@ -857,14 +852,14 @@ Note the different ~path~ attribute of the two schema are reflected into the Pyt
 #+end_note
 
 #+begin_src ipython :session :exports both :results raw drawer
-from dunedaq.appfwk import fdp
-from dunedaq.appfwk import fdc
+from dunedaq.appfwk import fakedataproducerdaqmodule as fdp
+from dunedaq.appfwk import fakedataconsumerdaqmodule as fdc
 fdc.Conf()
 #+end_src
 
 #+RESULTS:
 :results:
-# Out[161]:
+# Out[23]:
 : <record Conf, fields: {nIntsPerVector, starting_int, ending_int, queue_timeout_ms}>
 :end:
 
@@ -902,7 +897,7 @@ ac.pod()
 
 #+RESULTS:
 :results:
-# Out[164]:
+# Out[24]:
 #+BEGIN_EXAMPLE
   {'id': 'conf',
   'data': [{'match': 'source',
@@ -930,7 +925,7 @@ myconf
 
 #+RESULTS:
 :results:
-# Out[168]:
+# Out[25]:
 : <record Command, fields: {id, data}>
 :end:
 
@@ -941,4 +936,3 @@ development.  An initial approach is to use the same interactive REPL
 that we used to build the command objects.  This is described in
 [[file:ddrepl.org]].
 
-* Internals

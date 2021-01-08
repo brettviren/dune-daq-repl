@@ -1,4 +1,5 @@
 #+title: DUNE DAQ REPL
+#+setupfile: other/setup-index.org
 #+EXPORT_FILE_NAME: index.html
 
 This repo holds some ideas for handling ~appfwk~ commands

@@ -3,12 +3,12 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-10-28 Wed 15:24 -->
+<!-- 2021-01-08 Fri 16:46 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>DUNE DAQ REPL</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="Brett Viren" />
+<meta name="author" content="Brett Viren Brett Viren" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -193,15 +193,18 @@
   .org-svg { width: 90%; }
   /*]]>*/-->
 </style>
-<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/styles/readtheorg/css/readtheorg.css"/>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/styles/readtheorg/js/readtheorg.js"></script>
+<link rel="stylesheet" type="text/css" href="other/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="other/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="other/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="other/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="other/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="other/readtheorg/js/readtheorg.js"></script>
 <style> #content{max-width:1800px;}</style>
 <style> p{max-width:800px;}</style>
 <style> li{max-width:800px;}</style>
+<style> pre.src{border-radius: 5px; background-color:#333; color:#0f0;}</style>
+<style> pre.example{border-radius: 5px; background-color:#333; color:#0f0;}</style>
+<style> code{border-radius: 5px; background-color:#333; color:#0f0;}</style>
 <script type="text/javascript">
 /*
 @licstart  The following is the entire license notice for the
@@ -256,21 +259,21 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org073e69c">Introduction</a></li>
-<li><a href="#orgb093832">REPL with the File Command Facility</a>
+<li><a href="#org680ccbc">Introduction</a></li>
+<li><a href="#orgd2467b6">REPL with the File Command Facility</a>
 <ul>
-<li><a href="#org8c78932">Shell REPL</a></li>
-<li><a href="#org8f6b62f">Python REPL</a></li>
+<li><a href="#org5ca605e">Shell REPL</a></li>
+<li><a href="#orgfa8572b">Python REPL</a></li>
 </ul>
 </li>
-<li><a href="#orgb3fa007">REPL with the REST Command Facility</a></li>
+<li><a href="#org610640b">REPL with the REST Command Facility</a></li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org073e69c" class="outline-2">
-<h2 id="org073e69c">Introduction</h2>
-<div class="outline-text-2" id="text-org073e69c">
+<div id="outline-container-org680ccbc" class="outline-2">
+<h2 id="org680ccbc">Introduction</h2>
+<div class="outline-text-2" id="text-org680ccbc">
 <p>
 This document describes some approaches to interactively feeding
 commands to <code>appfwk</code> applications via various types of read-eval-print
@@ -280,9 +283,9 @@ loop (REPL) and with different types of command transport.  See also
 </div>
 </div>
 
-<div id="outline-container-orgb093832" class="outline-2">
-<h2 id="orgb093832">REPL with the File Command Facility</h2>
-<div class="outline-text-2" id="text-orgb093832">
+<div id="outline-container-orgd2467b6" class="outline-2">
+<h2 id="orgd2467b6">REPL with the File Command Facility</h2>
+<div class="outline-text-2" id="text-orgd2467b6">
 <p>
 The <code>appfwk</code> has a "command facility called the File Command Facility (FCF)
 (actually provided by <code>cmdlib</code>).  It is what is used when the
@@ -319,9 +322,9 @@ To provide some interactive pacing of commands we may use a REPL.
 </p>
 </div>
 
-<div id="outline-container-org8c78932" class="outline-3">
-<h3 id="org8c78932">Shell REPL</h3>
-<div class="outline-text-3" id="text-org8c78932">
+<div id="outline-container-org5ca605e" class="outline-3">
+<h3 id="org5ca605e">Shell REPL</h3>
+<div class="outline-text-3" id="text-org5ca605e">
 <p>
 The simplest REPL is no REPL.  Or, rather using simply your Unix shell
 and some basic Unix tools like <code>cat</code>.  To use this type of REPL we first
@@ -383,9 +386,9 @@ $ rm foo.fifo
 </div>
 </div>
 
-<div id="outline-container-org8f6b62f" class="outline-3">
-<h3 id="org8f6b62f">Python REPL</h3>
-<div class="outline-text-3" id="text-org8f6b62f">
+<div id="outline-container-orgfa8572b" class="outline-3">
+<h3 id="orgfa8572b">Python REPL</h3>
+<div class="outline-text-3" id="text-orgfa8572b">
 <p>
 A second approach to using a REPL with the File Command Facility is
 implemented in Python by the <a href="ddrepl.py">ddrepl</a> Python module.  This approach
@@ -426,24 +429,28 @@ long to wait (block) while receiving any stdout back from
 </div>
 
 <pre class="example">
-using fifo: /tmp/tmpa_kfdfoe/commands.jstream
+using fifo: /tmp/tmpk82viwoc/commands.jstream
 ready to send
-2020-Oct-28 15:24:22,715 INFO [fileCommandFacility::fileCommandFacility(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:237] uri: file:///tmp/tmpa_kfdfoe/commands.jstream
-2020-Oct-28 15:24:22,715 INFO [fileCommandFacility::fileCommandFacility(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:243] url: scheme:file path:/tmp/tmpa_kfdfoe/commands.jstream
-2020-Oct-28 15:24:22,715 INFO [fileCommandFacility::fileCommandFacility(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:270] open: file:///tmp/tmpa_kfdfoe/commands.jstream as jstream
-2020-Oct-28 15:24:22,716 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:303] DAQModuleManager execution complete
-2020-Oct-28 15:24:22,726 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:init
-2020-Oct-28 15:24:22,726 INFO [dunedaq::appfwk::DAQModuleManager::init_queues(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:73] Adding queue: hose
-2020-Oct-28 15:24:22,726 INFO [dunedaq::appfwk::DAQModuleManager::init_modules(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:36] construct: FakeDataProducerDAQModule : fdp
+2021-Jan-08 16:46:33,260 INFO [fileCommandFacility::fileCommandFacility(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:236] uri: file:///tmp/tmpk82viwoc/commands.jstream
+2021-Jan-08 16:46:33,261 INFO [fileCommandFacility::fileCommandFacility(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:242] url: scheme:file path:/tmp/tmpk82viwoc/commands.jstream
+2021-Jan-08 16:46:33,261 INFO [fileCommandFacility::fileCommandFacility(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:269] open: file:///tmp/tmpk82viwoc/commands.jstream as jstream
+2021-Jan-08 16:46:33,262 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:301] {"data":{"modules":[{"data":{"qinfos":[{"dir":"output","inst":"hose","name":"output"}]},"inst":"fdp","plugin":"FakeDataProducerDAQModule"},{"data":{"qinfos":[{"dir":"input","inst":"hose","name":"input"}]},"inst":"fdc","plugin":"FakeDataConsumerDAQModule"}],"queues":[{"capacity":10,"inst":"hose","kind":"StdDeQueue"}]},"id":"init"}
+2021-Jan-08 16:46:33,262 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:303] DAQModuleManager execution complete
+2021-Jan-08 16:46:33,271 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:init
+2021-Jan-08 16:46:33,272 INFO [dunedaq::appfwk::DAQModuleManager::init_queues(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:73] Adding queue: hose
+2021-Jan-08 16:46:33,272 INFO [dunedaq::appfwk::DAQModuleManager::init_modules(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:36] construct: FakeDataProducerDAQModule : fdp
 
-2020-Oct-28 15:24:22,827 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:303] DAQModuleManager execution complete
-2020-Oct-28 15:24:22,830 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:conf
+2021-Jan-08 16:46:33,372 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:301] {"data":{"modules":[{"data":{"ending_int":14,"nIntsPerVector":10,"queue_timeout_ms":100,"starting_int":-4,"wait_between_sends_ms":1000},"match":"fdp"},{"data":{"ending_int":14,"nIntsPerVector":10,"queue_timeout_ms":100,"starting_int":-4},"match":"fdc"}]},"id":"conf"}
+2021-Jan-08 16:46:33,372 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:303] DAQModuleManager execution complete
+2021-Jan-08 16:46:33,376 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:conf
 
-2020-Oct-28 15:24:22,931 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:303] DAQModuleManager execution complete
-2020-Oct-28 15:24:22,931 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:start
+2021-Jan-08 16:46:33,476 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:301] {"data":{"modules":[{"data":{"run":42},"match":""}]},"id":"start"}
+2021-Jan-08 16:46:33,476 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:303] DAQModuleManager execution complete
+2021-Jan-08 16:46:33,477 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:start
 
-2020-Oct-28 15:24:23,032 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:303] DAQModuleManager execution complete
-2020-Oct-28 15:24:23,032 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:stop
+2021-Jan-08 16:46:33,577 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:301] {"data":{"modules":[{"data":{},"match":"fdp"},{"data":{},"match":"fdc"}]},"id":"stop"}
+2021-Jan-08 16:46:33,577 INFO [fileCommandFacility::run(...) at /home/bv/dev/dune-daq/sv/filecmd/plugins/fileCommandFacility.cpp:303] DAQModuleManager execution complete
+2021-Jan-08 16:46:33,578 INFO [dunedaq::appfwk::DAQModuleManager::execute(...) at /home/bv/dev/dune-daq/sv/appfwk/src/DAQModuleManager.cpp:113] Command id:stop
 
 </pre>
 </div>
@@ -452,9 +459,9 @@ ready to send
 
 
 
-<div id="outline-container-orgb3fa007" class="outline-2">
-<h2 id="orgb3fa007">REPL with the REST Command Facility</h2>
-<div class="outline-text-2" id="text-orgb3fa007">
+<div id="outline-container-org610640b" class="outline-2">
+<h2 id="org610640b">REPL with the REST Command Facility</h2>
+<div class="outline-text-2" id="text-org610640b">
 <p>
 The above approach requires the DAQ application and the source of
 commands to reside on the same host.  Ie, both ends must access the
@@ -521,8 +528,8 @@ Docstring:      Access app REST API
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="author">Author: Brett Viren</p>
-<p class="date">Created: 2020-10-28 Wed 15:24</p>
+<p class="author">Author: Brett Viren Brett Viren</p>
+<p class="date">Created: 2021-01-08 Fri 16:46</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
